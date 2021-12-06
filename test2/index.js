@@ -41,7 +41,7 @@ Promise.resolve()
     feePayer: kp1.publicKey,
     recentBlockhash: rbh,
   });
-  var ins = solana.SystemProgram.createAccount({
+  var ins = new solana.SystemProgram.createAccount({
     fromPubkey: kp1.publicKey,
     newAccountPubkey: kp2.publicKey,
     lamports: solana.LAMPORTS_PER_SOL / 10000,
