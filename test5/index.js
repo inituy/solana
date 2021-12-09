@@ -17,12 +17,14 @@ var keys = [
   solana.Keypair.fromSecretKey(secrets[2]),
 ];
 
+var conn = new solana.Connection('https://api.devnet.solana.com', 'confirmed')
+  , token;
 
 Promise.resolve()
   .then(function () {
     console.log(new Date(), 'Starting...');
     return createNft({
-      connection: new solana.Connection('https://api.devnet.solana.com', 'confirmed'),
+      connection: conn,
       owner: keys[0],
       metadata: {
         symbol: '$INIT',
@@ -33,14 +35,21 @@ Promise.resolve()
       }
     })
   })
-  .then(function (token) {
+  .then(function (recentlyCreatedToken) {
+    token = recentlyCreatedToken;
     console.log(new Date(), 'Created NFT!');
     console.log(new Date(), 'Your token address is:', token.publicKey.toString());
+  })
+  .then(function () {
     console.log(new Date(), 'Minting NFT...');
     return mintNft({
+      connection: conn,
       token: token,
       owner: keys[0],
       receiver: keys[2],
+      metadata: {
+        uri: 'https://init.uy/images/crear-tu-sitio-y-alojarlo-gratis.png'
+      }
     });
   })
   .then(function () {
