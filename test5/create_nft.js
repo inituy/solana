@@ -4,30 +4,26 @@ var spltoken = require('@solana/spl-token');
 var metaplex = require('@metaplex/js');
 
 module.exports = function createNft(input) {
-  var DECIMALS = 0
-    , MULTISIGNERS = []
-    , AMOUNT = 1;
+  var DECIMALS = 0;
 
-  var mintAuthority = solana.Keypair.generate()
-    , token
+  var token
     , tokenAccount
     , tokenMetadataAccount;
 
-
-  // NOTE: If payer not in creators array, add it.
-  var payerCreator = input.metadata.creators.find(function (creator) {
-    return creator.keypair.publicKey.equals(input.payer.publicKey);
+  // NOTE: If owner not in creators array, add it.
+  var ownerCreator = input.metadata.creators.find(function (creator) {
+    return creator.keypair.publicKey.equals(input.owner.publicKey);
   });
-  if (!payerCreator)
-    input.metadata.creators.unshift({ keypair: input.payer, share: 0 });
+  if (!ownerCreator)
+    input.metadata.creators.unshift({ keypair: input.owner, share: 0 });
 
   return Promise.resolve()
     .then(function () {
       return spltoken.Token.createMint(
         input.connection,
-        input.payer,             // Payer
-        input.payer.publicKey,   // Mint authority
-        input.payer.publicKey,   // Freeze authority
+        input.owner,             // Payer
+        input.owner.publicKey,   // Mint authority
+        input.owner.publicKey,   // Freeze authority
         DECIMALS,
         spltoken.TOKEN_PROGRAM_ID,
       );
@@ -36,18 +32,10 @@ module.exports = function createNft(input) {
       token = _;
     })
     .then(function () {
-      return token.getOrCreateAssociatedAccountInfo(input.payer.publicKey);
+      return token.getOrCreateAssociatedAccountInfo(input.owner.publicKey);
     })
     .then(function (_) {
       tokenAccount = _;
-    })
-    .then(function () {
-      return token.mintTo(
-        tokenAccount.address,
-        input.payer.publicKey,
-        MULTISIGNERS,
-        AMOUNT,
-      );
     })
     .then(function () {
       return solana.PublicKey.findProgramAddress(
@@ -61,40 +49,31 @@ module.exports = function createNft(input) {
     })
     .then(function (pda) {
       var transaction = new metaplex.programs.metadata.CreateMetadata(
-        { feePayer: input.payer.publicKey, },
+        { feePayer: input.owner.publicKey, },
         {
           mint: token.publicKey,
+          mintAuthority: input.owner.publicKey,
           metadata: pda[0],
           metadataData: new metaplex.programs.metadata.MetadataDataData({
             symbol: input.metadata.symbol,
             name: input.metadata.name,
             uri: input.metadata.uri,
-            sellerFeeBasisPoints: input.sellerFee,
+            sellerFeeBasisPoints: input.metadata.sellerFee,
             creators: input.metadata.creators.map(function (creator) {
               return new metaplex.programs.metadata.Creator({
                 address: creator.keypair.publicKey.toString(),
                 share: creator.share,
-                verified: creator.keypair.publicKey.equals(input.payer.publicKey),
+                verified: creator.keypair.publicKey.equals(input.owner.publicKey),
               })
             })
           }),
-          updateAuthority: input.payer.publicKey,
-          mintAuthority: input.payer.publicKey
+          updateAuthority: input.owner.publicKey
         }
       );
       return solana.sendAndConfirmTransaction(
         input.connection,
         transaction,
-        [input.payer],
-      );
-    })
-    .then(function () {
-      return token.setAuthority(
-        token.publicKey,
-        mintAuthority.publicKey,
-        'MintTokens',
-        input.payer,
-        []
+        [input.owner],
       );
     })
     .then(function (result) {

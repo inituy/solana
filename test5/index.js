@@ -1,7 +1,8 @@
 var fs = require('fs');
-var bs58 = require('bs58');
 var solana = require('@solana/web3.js');
+
 var createNft = require('./create_nft');
+var mintNft = require('./mint_nft');
 
 // 1. load secret keys
 var secrets = [
@@ -11,8 +12,8 @@ var secrets = [
 ];
 
 var keys = [
-  solana.Keypair.fromSecretKey(secrets[0]), // payer
-  solana.Keypair.fromSecretKey(secrets[1]), // mint authority
+  solana.Keypair.fromSecretKey(secrets[0]),
+  solana.Keypair.fromSecretKey(secrets[1]),
   solana.Keypair.fromSecretKey(secrets[2]),
 ];
 
@@ -22,23 +23,27 @@ Promise.resolve()
     console.log(new Date(), 'Starting...');
     return createNft({
       connection: new solana.Connection('https://api.devnet.solana.com', 'confirmed'),
-      payer: keys[0],
+      owner: keys[0],
       metadata: {
         symbol: '$INIT',
         name: 'init.uy logo',
         uri: 'https://init.uy/images/og-image.png',
-        sellerFee: 10000,
-        creators: [
-          { keypair: keys[1], share: 50 },
-          { keypair: keys[2], share: 50 },
-        ]
+        sellerFee: 5000,
+        creators: [{ keypair: keys[1], share: 100 }]
       }
     })
   })
   .then(function (token) {
-    console.log(new Date(), 'Done!');
+    console.log(new Date(), 'Created NFT!');
     console.log(new Date(), 'Your token address is:', token.publicKey.toString());
+    console.log(new Date(), 'Minting NFT...');
+    return mintNft({
+      token: token,
+      owner: keys[0],
+      receiver: keys[2],
+    });
   })
   .then(function () {
+    console.log(new Date(), 'Minted NFT to:', keys[2].publicKey.toString());
     process.exit(1);
   });
