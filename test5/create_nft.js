@@ -1,4 +1,3 @@
-var bs58 = require('bs58');
 var solana = require('@solana/web3.js');
 var spltoken = require('@solana/spl-token');
 var metaplex = require('@metaplex/js');
