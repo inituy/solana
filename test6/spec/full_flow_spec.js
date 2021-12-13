@@ -1,36 +1,51 @@
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 99999999;
 
-var createConnection = require('./support/create_connection')
-  , generateKeypair = require('./support/generate_keypair')
-  , readKeypair = require('./support/read_keypair')
-  , fundWallet = require('./support/fund_wallet')
-  , createCandyMachine = require('./support/create_candy_machine')
-  , getAssociatedTokenAccount = require('./support/get_associated_token_account')
-  , getMetadata = require('./support/get_metadata')
-  , getAccount = require('./support/get_account')
-  , getBalance = require('./support/get_balance')
-  , readJson = require('./support/read_json')
+var path = require('path');
+
+var readJson = require('./support/read_json')
+  , getReceiverKeypair = require('./support/get_receiver_keypair')
+  , getCreatorKeypair = require('./support/get_creator_keypair')
+
+var createDevnetConnection = require('../solana/create_devnet_connection')
+  , generateKeypair = require('../solana/generate_keypair')
+  , readKeypair = require('../solana/read_keypair')
+  , fundWallet = require('../solana/fund_wallet')
+  , getBalance = require('../solana/get_balance')
+  , getAccount = require('../solana/get_account');
+
+var createToken = require('../spltoken/create_token')
+  , createTokenAccount = require('../spltoken/create_token_account')
+  , getAssociatedTokenAccount = require('../spltoken/get_associated_token_account');
+
+var getMetadata = require('../metaplex/get_metadata');
+
+var createCandyMachine = require('../candymachine/create_candy_machine')
+  , forgetCandyMachine = require('../candymachine/forget_candy_machine')
+  , mintCandyMachineNft = require('../candymachine/mint_candy_machine_nft')
 
 describe('NFT exchange full flow', function () {
   // NOTE: Before this test can be run (a.k.a. pending automation):
-  // * Create a keypair to represent the creator
-  // * Create a keypair to represent the receiver
-  // * Create a candy machine for the nfts using the creator keypair
-  // * Create a fungible token and account using the creator keypair
-  // * Create a candy machine for rewards using the creator keypair, the
-  //   fungible token address and account address.
-  // * Mint an nft to the creator.
-  // * Transfer the nft to the receiver.
+  // [x] Create a keypair to represent the creator
+  // [x] Create a keypair to represent the receiver
+  // [x] Create a fungible token and account using the creator keypair
+  // [x] Create a candy machine for the nfts using the creator keypair
+  // [x] Create a candy machine for rewards using the creator keypair, the
+  //     fungible token address and account address.
+  // [x] Mint an nft to the creator.
+  // [ ] Transfer the nft to the receiver.
 
   var connection
-    , receiverKeypair             = readKeypair('./receiver.json')
-    , creatorKeypair              = readKeypair('./creator.json')
-    , fungibleTokenPublicKey      = 'AGZAucYaaMXNCMQYtxU1BKEBSukRXvJtgYLUxj23Zoh2'
-    , nftCandyMachinePublicKey    = 'DRsKJgpHo4ZeSsQ62j8AZRsud9NrqicWZceMRPUNWNc1'
-    , rewardCandyMachinePublicKey = '3LNUS5gtR6pa315uQDNtcoJbETCuJJxsA8inBoJjW4Dp'
-    , nftPublicKey                = 'CZG9X8YdhoZgNkZGnQaawvjkMX3AGgtbg7uc4tW2YuV7'
+    , fungibleToken
+    , receiverKeypair
+    , creatorKeypair
+    , creatorFungibleTokenAccount
+    , nftCandyMachine
+    , rewardCandyMachine
+
+    // TODO: Get this values programatically.
+    , nftPublicKey = 'CZG9X8YdhoZgNkZGnQaawvjkMX3AGgtbg7uc4tW2YuV7'
+    , rewardPublicKey = '11111111111111111111111111111111111111111111'
     , receiverInitialBalance
-    , rewardPublicKey             = '11111111111111111111111111111111111111111111'
 
   var uriMap = readJson('./uri_map.json');
 
@@ -38,35 +53,114 @@ describe('NFT exchange full flow', function () {
     , purchaseReward = require('../functions/purchase_reward')
     , revealRewards = require('../functions/reveal_rewards')
 
-  beforeEach(function () {
+  beforeAll(function () {
     return Promise.resolve()
       // 0. connection is started.
-      .then(function () { return createConnection(); })
+      .then(function () { console.log(new Date(), 'Creating connection...'); })
+      .then(function () { return createDevnetConnection(); })
       .then(function (_) { connection = _; })
 
-      // 2. creator wallet is funded.
-      // .then(function () {
-      //   return fundWallet({
-      //     connection: connection,
-      //     wallet: creatorKeypair.publicKey,
-      //   });
-      // })
-
-      // 6. receiver wallet is funded.
-      // .then(function () {
-      //   return fundWallet({
-      //     connection: connection,
-      //     wallet: receiverKeypair.publicKey,
-      //   });
-      // })
-
+      // 1. get and fund creator wallet.
+      .then(function () { console.log(new Date(), 'Funding creator...'); })
+      .then(function () { creatorKeypair = getCreatorKeypair(); })
       .then(function () {
-        return getBalance({
-          connection: connection,
-          wallet: receiverKeypair.publicKey,
-        })
+        var pubkey = creatorKeypair.publicKey;
+        return fundWallet({ connection: connection, wallet: pubkey });
+      })
+
+      // 2. get and fund receiver wallet.
+      .then(function () { console.log(new Date(), 'Funding receiver...'); })
+      .then(function () { receiverKeypair = getReceiverKeypair(); })
+      .then(function () {
+        var pubkey = receiverKeypair.publicKey;
+        return fundWallet({ connection: connection, wallet: pubkey });
+      })
+
+      // 3. capture receiver initial balance.
+      .then(function () { console.log(new Date(), 'Getting receiver balance...'); })
+      .then(function () {
+        var pubkey = receiverKeypair.publicKey;
+        return getBalance({ connection: connection, wallet: pubkey });
       })
       .then(function (_) { receiverInitialBalance = _; })
+
+      // 4. create fungible token, create account and increase supply.
+      .then(function () { console.log(new Date(), 'Creating fungible token...'); })
+      .then(function () {
+        return createToken({
+          connection: connection,
+          owner: creatorKeypair,
+          decimals: 2,
+        });
+      })
+      .then(function (_) { fungibleTokenPublicKey = _; })
+      .then(function () { console.log(new Date(), 'Creating fungible token account for creator...'); })
+      .then(function () {
+        return createTokenAccount({
+          connection: connection,
+          token: fungibleTokenPublicKey,
+          tokenOwner: creatorKeypair,
+          tokenAccountOwner: creatorKeypair.publicKey,
+        })
+      })
+      .then(function (_) { creatorFungibleTokenAccountPublicKey = _; })
+
+      // 5. create nft candy machine.
+      .then(function () { console.log(new Date(), 'Forgetting and re-creating NFT candy machine...'); })
+      .then(function () {
+        return forgetCandyMachine({
+          rootPath: path.join(__dirname, './support/nft'),
+          environment: 'devnet',
+        })
+      })
+      .then(function () {
+        return createCandyMachine({
+          rootPath: path.join(__dirname, './support/nft'),
+          assetsPath: path.join(__dirname, './support/nft/assets'),
+          environment: 'devnet',
+          owner: creatorKeypair,
+        });
+      })
+      .then(function (candyMachine) {
+        nftCandyMachine = candyMachine;
+      })
+
+      // 6. create reward candy machine
+      .then(function () { console.log(new Date(), 'Forgetting and re-creating reward candy machine...'); })
+      .then(function () {
+        return forgetCandyMachine({
+          rootPath: path.join(__dirname, './support/reward'),
+          environment: 'devnet',
+        })
+      })
+      .then(function () {
+        return createCandyMachine({
+          rootPath: path.join(__dirname, './support/reward'),
+          assetsPath: path.join(__dirname, './support/reward/assets'),
+          environment: 'devnet',
+          owner: creatorKeypair,
+          token: fungibleToken,
+          tokenAccount: creatorFungibleTokenAccount
+        });
+      })
+      .then(function (candyMachine) {
+        rewardCandyMachine = candyMachine;
+      })
+
+      // 7. mint nft to creator
+      .then(function () { console.log(new Date(), 'Minting NFT to creator...'); })
+      .then(function () {
+        return mintCandyMachineNft({
+          rootPath: path.join(__dirname, './support/reward'),
+          environment: 'devnet',
+          owner: creatorKeypair,
+        });
+      })
+
+      .then(function (candyMachine) {
+        console.log(new Date(), 'Done minting!');
+        console.log(new Date(), 'Candy machine looks like: ', JSON.stringify(candyMachine));
+      })
   });
 
   it('receiver mints NFT', function () {
@@ -75,7 +169,7 @@ describe('NFT exchange full flow', function () {
     // 3. receiver has nft ata with balance 1.
   });
 
-  it('exchanges NFT for fungible token', function () {
+  xit('exchanges NFT for fungible token', function () {
     return Promise.resolve()
       // 1. receiver exchanges nft at custom function 1.
       .then(function () {
@@ -111,7 +205,7 @@ describe('NFT exchange full flow', function () {
       });
   });
 
-  it('exchange fungible token for reward', function () {
+  xit('exchange fungible token for reward', function () {
     return Promise.resolve()
       // 1. receiver exchanges fungible token at candy machine.
       .then(function () {
@@ -159,7 +253,7 @@ describe('NFT exchange full flow', function () {
       })
   });
 
-  it('reward is revealed', function () {
+  xit('reward is revealed', function () {
     return Promise.resolve()
       // 1. custom function 1 is called.
       .then(function () {

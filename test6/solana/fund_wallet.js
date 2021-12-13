@@ -1,8 +1,7 @@
 var solana = require('@solana/web3.js');
-var wait = require('./wait');
 
 module.exports = function (params) {
-  console.log('Funding wallet...', params.wallet.toString());
+  // console.log(new Date(), 'Funding wallet...', params.wallet.toString());
   var amount = solana.LAMPORTS_PER_SOL * 5;
   return Promise.resolve()
     .then(function () {
@@ -13,7 +12,7 @@ module.exports = function (params) {
     })
     .then(function () {
       var ms = 10000;
-      console.log(`Wallet funded, waiting for ${ms}ms...`);
-      return wait(ms);
+      // console.log(new Date(), `Wallet funded, waiting for ${ms}ms...`);
+      return new Promise(function (ok) { setTimeout(ok, ms); });
     });
 };
