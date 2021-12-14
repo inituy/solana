@@ -6,7 +6,10 @@ module.exports = function (params) {
   var cachePath = path.join(cacheDir, `${params.environment}-temp`);
   return Promise.resolve()
     .then(function () {
-      fs.unlinkSync(cachePath);
-      fs.rmdirSync(cacheDir);
+      try {
+        fs.unlinkSync(cachePath);
+        fs.rmdirSync(cacheDir);
+      }
+      catch (e) {}
     });
 };

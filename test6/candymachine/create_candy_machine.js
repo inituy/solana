@@ -1,6 +1,6 @@
 var fs = require('fs');
 var path = require('path');
-var execTs = require('./exec_ts');
+var execTs = require('./utils/exec_ts');
 
 module.exports = function (params) {
   var secretKeyPath = path.join(__dirname, `id${Math.ceil(Math.random()*1000000)}.json`);
@@ -32,7 +32,9 @@ module.exports = function (params) {
           console.log(new Date(), 'Candy machine already created');
         });
     })
-    .then(function () { fs.unlinkSync(secretKeyPath); })
+    .then(function () {
+      try { fs.unlinkSync(secretKeyPath); } catch (e) {}
+    })
     .then(function () {
       var cachePath = path.join(params.rootPath, '.cache', `${params.environment}-temp`);
       var cacheContents = fs.readFileSync(cachePath).toString();

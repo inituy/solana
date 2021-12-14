@@ -49,9 +49,10 @@ describe('NFT exchange full flow', function () {
 
   var uriMap = readJson('./uri_map.json');
 
-  var exchangeNft = require('../functions/exchange_nft')
-    , purchaseReward = require('../functions/purchase_reward')
-    , revealRewards = require('../functions/reveal_rewards')
+  var purchaseNft = require('../app/purchase_nft')
+    , exchangeNft = require('../app/exchange_nft')
+    , purchaseReward = require('../app/purchase_reward')
+    , revealRewards = require('../app/reveal_rewards')
 
   beforeAll(function () {
     return Promise.resolve()
@@ -164,9 +165,18 @@ describe('NFT exchange full flow', function () {
   });
 
   it('receiver mints NFT', function () {
-    // 1. receiver mints nft at candy machine.
-    // 2. receiver has updated balance after paying for the nft and fees.
-    // 3. receiver has nft ata with balance 1.
+    return Promise.resolve()
+      // 1. receiver mints nft at candy machine.
+      .then(function () {
+        return purchaseNft({
+          connection: connection,
+          token: nftPublicKey,
+          owner: receiverKeypair
+        });
+      })
+
+      // 2. receiver has updated balance after paying for the nft and fees.
+      // 3. receiver has nft ata with balance 1.
   });
 
   xit('exchanges NFT for fungible token', function () {

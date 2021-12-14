@@ -5,8 +5,8 @@ module.exports = function (params) {
   return Promise.resolve()
     .then(function () {
       var cmdParts = [
-        `node ${path.join(__dirname, './node_modules/ts-node/dist/bin.js')}`,
-        path.join(__dirname, './metaplex/js/packages/cli/src/candy-machine-cli.ts'),
+        `node ${path.join(__dirname, '../node_modules/ts-node/dist/bin.js')}`,
+        path.join(__dirname, '../metaplex/js/packages/cli/src/candy-machine-cli.ts'),
       ];
       var cmd = cmdParts.concat(params.params).join(' ');
       var options = { cwd: params.cwd };
