@@ -7,8 +7,10 @@ edition = "2021"
 
 [dependencies]
 solana-program = "1.6.9"
-spl-token = {version = "3.1.1", features = ["no-entrypoint"]}
+spl-token = { version = "3.1.1", features = ["no-entrypoint"] }
+spl-token-metadata = { version = "0.0.1", features = ["no-entrypoint"] }
+borsh = { version = "0.9.1" }
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "test3"
+name = "test4"
