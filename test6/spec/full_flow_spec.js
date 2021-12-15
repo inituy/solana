@@ -179,7 +179,7 @@ describe('NFT exchange full flow', function () {
       // 3. receiver has nft ata with balance 1.
   });
 
-  it('exchanges NFT for fungible token', function () {
+  xit('exchanges NFT for fungible token', function () {
     return Promise.resolve()
       // 1. receiver exchanges nft at custom function 1.
       .then(function () {
@@ -199,7 +199,6 @@ describe('NFT exchange full flow', function () {
         });
       })
       .then(function (accountInfo) {
-        console.log(accountInfo);
         expect(accountInfo).not.toBeNull();
         expect(accountInfo.balance).toBe(1);
       })
