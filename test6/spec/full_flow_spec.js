@@ -1,6 +1,7 @@
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 99999999;
 
-var path = require('path');
+var path = require('path')
+  , solana = require('../solana/node_modules/@solana/web3.js')
 
 var readJson = require('./support/read_json')
   , getReceiverKeypair = require('./support/get_receiver_keypair')
@@ -53,6 +54,12 @@ describe('NFT exchange full flow', function () {
     , exchangeNft = require('../app/exchange_nft')
     , purchaseReward = require('../app/purchase_reward')
     , revealRewards = require('../app/reveal_rewards')
+
+  // Daemon functions
+  var getNFTMintKeyAndNameForMintedNFT = require('../candymachine/metaplex/js/packages/cli/src/functions/data/get_nft_mintKey_and_name')
+    , getMembershipNFTAccount = require('../candymachine/metaplex/js/packages/cli/src/functions/data/get_membership_token_account')
+    , getMembertshipNFTMetadata = require('../candymachine/metaplex/js/packages/cli/src/functions/data/get_payment_token_metadata')
+    , makeAllTransactions = require('../candymachine/metaplex/js/packages/cli/src/functions/data/make_all_transactions');
 
   beforeAll(function () {
     return Promise.resolve()
@@ -169,7 +176,7 @@ describe('NFT exchange full flow', function () {
       // 1. receiver mints nft at candy machine.
       .then(function () {
         return purchaseNft({
-          connection: connection,
+          connection: new solana.Connection('https://api.devnet'),
           token: nftPublicKey,
           owner: receiverKeypair
         });
@@ -263,35 +270,61 @@ describe('NFT exchange full flow', function () {
       })
   });
 
-  xit('reward is revealed', function () {
-    return Promise.resolve()
-      // 1. custom function 1 is called.
+  it('reward is revealed', function () {
+    var mint = new solana.PublicKey("CZG9X8YdhoZgNkZGnQaawvjkMX3AGgtbg7uc4tW2YuV7")
+    var payload = {
+      connection: new solana.Connection('https://api.devnet.solana.com'),
+      nftMetadata: [
+        {
+          mint: mint,
+          data: {
+            name: 'Pokemon 0'
+          }
+        },
+        "CZG9X8YdhoZgNkZGnQaawvjkMX3AGgtbg7uc4tW2YuV7"
+      ]
+    }
+    return Promise.resolve(payload)
+      // 1. get the infromation from the metadata provided by the updater
       .then(function () {
-        return revealRewards({
-          connection: connection,
-        });
+        return getNFTMintKeyAndNameForMintedNFT(payload)
       })
 
-      // 2. receiver has nft with updated metadata.
-      .then(function () {
-        return getMetadata({
-          connection: connection,
-          token: nftPublicKey
-        });
-      })
-      .then(function (metadata) {
-        expect(metadata.uri).toEqual('https://init.uy');
+      .then(function (data) {
+        expect(data.nft).toEqual({
+          mintKey: payload.nftMetadata[0].mint,
+          name: payload.nftMetadata[0].data.name.split("\x00")[0]
+        })
+        return data
       })
 
-      // 3. receiver has reward with updated metadata.
-      .then(function () {
-        return getMetadata({
-          connection: connection,
-          token: rewardPublicKey,
-        });
+      // 2. updater get the membership token account
+      .then(function (data) {
+        return getMembershipNFTAccount(data);
       })
-      .then(function (metadata) {
-        expect(metadata.uri).toEqual('https://init.uy/revealed');
+      .then(function (data) {
+        expect(data.paymentToken).toEqual({
+          mintKey: payload.nftMetadata[0].mint
+        });
+        return data
+      })
+
+      // 3. updater finds the membership NFT name
+      .then(function (data) {
+        return getMembertshipNFTMetadata(data);
+      })
+      .then(function (data) {
+        expect(data.membershipNFT).toEqual({ name: "Pokemon 0" });
+        return data
+      })
+
+      // 4. updater updates mintedNFT, membershipNFT metadata and signs the mintedNFT
+      .then(function (data) {
+        console.log(data);
+        return makeAllTransactions(data)
+      })
+      .then(function (data) {
+        expect()
       })
   });
 });
