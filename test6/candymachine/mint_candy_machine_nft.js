@@ -25,7 +25,7 @@ module.exports = function (params) {
       try { fs.unlinkSync(secretKeyPath); } catch (e) {}
     })
     .then(function () {
-      var cachePath = path.join(params.rootPath, '.cache', `${params.environment}-temp`);
+      var cachePath = path.join(params.rootPath, '.cache', `${params.environment}-temp.json`);
       var cacheContents = fs.readFileSync(cachePath).toString();
       var cacheJson = JSON.parse(cacheContents);
       return cacheJson;
