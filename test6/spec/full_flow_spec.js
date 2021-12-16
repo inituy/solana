@@ -153,7 +153,7 @@ describe('NFT exchange full flow', function () {
         return mintCandyMachineNft({
           rootPath: path.join(__dirname, './support/reward'),
           environment: 'devnet',
-          owner: creatorKeypair,
+          owner: receiverKeypair,
         });
       })
 
