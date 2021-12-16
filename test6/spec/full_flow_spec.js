@@ -179,14 +179,20 @@ describe('NFT exchange full flow', function () {
       // 3. receiver has nft ata with balance 1.
   });
 
-  xit('exchanges NFT for fungible token', function () {
+  xit('exchange fails if receiver already got her reward', function () {
+  });
+
+  xit('exchange fails if receiver passes NFT not owned by her', function () {
+  });
+
+  xit('exchanges NFT for reward', function () {
     return Promise.resolve()
       // 1. receiver exchanges nft at custom function 1.
       .then(function () {
         return exchangeNft({
           connection: connection,
-          token: nftPublicKey,
-          owner: receiverKeypair.secretKey,
+          nft: nftPublicKey,
+          owner: receiverKeypair,
         });
       })
 
@@ -213,54 +219,6 @@ describe('NFT exchange full flow', function () {
       .then(function (metadata) {
         expect(metadata.data.data.uri).toEqual('https://banafederico.com');
       });
-  });
-
-  xit('exchange fungible token for reward', function () {
-    return Promise.resolve()
-      // 1. receiver exchanges fungible token at candy machine.
-      .then(function () {
-        return purchaseReward({
-          connection: connection,
-          purchaser: receiverKeypair,
-        });
-      })
-
-      // 2. receiver has updated balance after paying for fees.
-      .then(function () {
-        return getBalance({
-          connection: connection,
-          wallet: receiverKeypair.publicKey
-        })
-      })
-      .then(function (balance) {
-        expect(balance).toBe(receiverInitialBalance - 1);
-      })
-
-      // 3. receiver has fungible token ata with balance 0.
-      .then(function () {
-        return getAssociatedTokenAccount({
-          connection: connection,
-          token: fungibleTokenPublicKey,
-          wallet: receiverKeypair.publicKey,
-        });
-      })
-      .then(function (accountInfo) {
-        expect(accountInfo).not.toBeNull();
-        expect(accountInfo.balance).toBe(0);
-      })
-
-      // 4. receiver has reward ata with balance 1.
-      .then(function () {
-        return getAssociatedTokenAccount({
-          connection: connection,
-          token: rewardPublicKey,
-          wallet: receiverKeypair.publicKey,
-        });
-      })
-      .then(function (accountInfo) {
-        expect(accountInfo).not.toBeNull();
-        expect(accountInfo.balance).toBe(1);
-      })
   });
 
   xit('reward is revealed', function () {
