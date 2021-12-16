@@ -51,7 +51,6 @@ describe('NFT exchange full flow', function () {
 
   var purchaseNft = require('../app/purchase_nft')
     , exchangeNft = require('../app/exchange_nft')
-    , purchaseReward = require('../app/purchase_reward')
     , revealRewards = require('../app/reveal_rewards')
 
   beforeAll(function () {
