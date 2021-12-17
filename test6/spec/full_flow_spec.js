@@ -171,14 +171,15 @@ describe('NFT exchange full flow', function () {
       })
   });
 
-  xit('receiver mints NFT', function () {
+  it('receiver mints NFT', function () {
     return Promise.resolve()
       // 1. receiver mints nft at candy machine.
       .then(function () {
         return purchaseNft({
           connection: new solana.Connection('https://api.devnet.solana.com'),
           token: nftPublicKey,
-          owner: receiverKeypair,
+          receiver: receiverKeypair,
+          owner: creatorKeypair,
           nftCandyMachine: nftCandyMachine
         });
       })
@@ -187,23 +188,7 @@ describe('NFT exchange full flow', function () {
       // 3. receiver has nft ata with balance 1.
   });
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-  it('exchanges NFT for fungible token', function () {
-=======
-=======
->>>>>>> daemon-test
-  xit('exchange fails if receiver already got her reward', function () {
-  });
-
-  xit('exchange fails if receiver passes NFT not owned by her', function () {
-  });
-
   xit('exchanges NFT for reward', function () {
-<<<<<<< HEAD
->>>>>>> 3bbcf2db392296259234f69728a8759105d39225
-=======
->>>>>>> daemon-test
     return Promise.resolve()
       // 1. receiver exchanges nft at custom function 1.
       .then(function () {
