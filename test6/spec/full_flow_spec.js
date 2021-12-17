@@ -147,11 +147,12 @@ describe('NFT exchange full flow', function () {
         rewardCandyMachine = candyMachine;
       })
 
+      // TODO: This should not be part of pre-condition, should be part of test.
       // 7. mint nft to creator
-      .then(function () { console.log(new Date(), 'Minting NFT to creator...'); })
+      .then(function () { console.log(new Date(), 'Minting NFT to receiver...'); })
       .then(function () {
         return mintCandyMachineNft({
-          rootPath: path.join(__dirname, './support/reward'),
+          rootPath: path.join(__dirname, './support/nft'),
           environment: 'devnet',
           owner: receiverKeypair,
         });
