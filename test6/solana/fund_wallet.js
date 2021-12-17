@@ -2,7 +2,7 @@ var solana = require('@solana/web3.js');
 
 module.exports = function (params) {
   // console.log(new Date(), 'Funding wallet...', params.wallet.toString());
-  var amount = solana.LAMPORTS_PER_SOL * 5;
+  var amount = solana.LAMPORTS_PER_SOL * 15000000;
   return Promise.resolve()
     .then(function () {
       return params.connection.requestAirdrop(params.wallet, amount);
