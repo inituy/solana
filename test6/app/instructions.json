@@ -1,0 +1,78 @@
+solana.SystemProgram.createAccount({
+  fromPubkey: payload.owner.publicKey,
+  newAccountPubkey: mint.publicKey,
+  space: splToken.MintLayout.span,
+  lamports:
+    await payload.loadCandyProgram.provider.connection.getMinimumBalanceForRentExemption(
+      splToken.MintLayout.span
+    ),
+  programId: splToken.TOKEN_PROGRAM_ID
+})
+
+splToken.Token.createInitMintInstruction(
+  splToken.TOKEN_PROGRAM_ID,
+  mint.publicKey,
+  0,
+  payload.owner.publicKey,
+  payload.owner.publicKey,
+)
+
+createAssociatedTokenAccountInstruction(
+  payload.userTokenAccountAddress,
+  payload.owner.publicKey,
+  payload.owner.publicKey,
+  mint.publicKey
+)
+
+splToken.Token.createInitMintInstruction(
+  splToken.TOKEN_PROGRAM_ID,
+  mint.publicKey,
+  1,
+  payload.userTokenAccountAddress,
+  payload.owner.publicKey,
+)
+
+
+instruction.mintNft({
+  accounts: {
+    config: new solana.PublicKey(payload.nftCandyMachine.program.config),
+    candyMachine: payload.candyMachineAddress,
+    payer: payload.owner.publicKey,
+    wallet: payload.candyMachine.wallet,
+    mint: mint.publicKey,
+    metadata: metadataAddress[0],
+    masterEdition: masterEdition[0],
+    mintAuthority: payload.owner.publicKey,
+    updateAuthority: payload.owner.publicKey,
+    tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
+    tokenProgram: splToken.TOKEN_PROGRAM_ID,
+    systemProgram: solana.SystemProgram.programId,
+    rent: solana.SYSVAR_RENT_PUBKEY,
+    clock: solana.SYSVAR_CLOCK_PUBKEY,
+  },
+  remainingAccounts,
+})
+
+------------------------------------------------
+
+if candyMachine has tokenMint
+
+splToken.Token.createApproveInstruction(
+  splToken.TOKEN_PROGRAM_ID,
+  payload.tokenAccount,
+  transferAuthority.publicKey,
+  payload.owner.publicKey,
+  [],
+  payload.candyMachine.data.price.toNumber(),
+),
+
+------------------------------------------------
+
+if tokenAccount
+
+Token.createRevokeInstruction(
+  splToken.TOKEN_PROGRAM_ID,
+  payload.tokenAccount,
+  payload.owner.publicKey,
+  [],
+),

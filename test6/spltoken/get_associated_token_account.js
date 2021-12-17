@@ -12,7 +12,6 @@ module.exports = function (params) {
       );
     })
     .then(function (publicKey) {
-      console.log(publicKey.toString());
       return params.connection.getAccountInfo(publicKey);
     });
 };

@@ -1,6 +1,7 @@
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 99999999;
 
-var path = require('path');
+var path = require('path')
+  , solana = require('../solana/node_modules/@solana/web3.js')
 
 var readJson = require('./support/read_json')
   , getReceiverKeypair = require('./support/get_receiver_keypair')
@@ -52,6 +53,12 @@ describe('NFT exchange full flow', function () {
   var purchaseNft = require('../app/purchase_nft')
     , exchangeNft = require('../app/exchange_nft')
     , revealRewards = require('../app/reveal_rewards')
+
+  // Daemon functions
+  var getNFTMintKeyAndNameForMintedNFT = require('../candymachine/metaplex/js/packages/cli/src/functions/data/get_nft_mintKey_and_name')
+    , getMembershipNFTAccount = require('../candymachine/metaplex/js/packages/cli/src/functions/data/get_membership_token_account')
+    , getMembertshipNFTMetadata = require('../candymachine/metaplex/js/packages/cli/src/functions/data/get_payment_token_metadata')
+    // , makeAllTransactions = require('../candymachine/metaplex/js/packages/cli/src/functions/data/make_all_transactions');
 
   beforeAll(function () {
     return Promise.resolve()
@@ -169,9 +176,10 @@ describe('NFT exchange full flow', function () {
       // 1. receiver mints nft at candy machine.
       .then(function () {
         return purchaseNft({
-          connection: connection,
+          connection: new solana.Connection('https://api.devnet.solana.com'),
           token: nftPublicKey,
-          owner: receiverKeypair
+          owner: receiverKeypair,
+          nftCandyMachine: nftCandyMachine
         });
       })
 
@@ -180,8 +188,11 @@ describe('NFT exchange full flow', function () {
   });
 
 <<<<<<< HEAD
+<<<<<<< HEAD
   it('exchanges NFT for fungible token', function () {
 =======
+=======
+>>>>>>> daemon-test
   xit('exchange fails if receiver already got her reward', function () {
   });
 
@@ -189,7 +200,10 @@ describe('NFT exchange full flow', function () {
   });
 
   xit('exchanges NFT for reward', function () {
+<<<<<<< HEAD
 >>>>>>> 3bbcf2db392296259234f69728a8759105d39225
+=======
+>>>>>>> daemon-test
     return Promise.resolve()
       // 1. receiver exchanges nft at custom function 1.
       .then(function () {
@@ -209,7 +223,6 @@ describe('NFT exchange full flow', function () {
         });
       })
       .then(function (accountInfo) {
-        console.log(accountInfo);
         expect(accountInfo).not.toBeNull();
         expect(accountInfo.balance).toBe(1);
       })
@@ -230,31 +243,43 @@ describe('NFT exchange full flow', function () {
     return Promise.resolve()
       // 1. custom function 1 is called.
       .then(function () {
-        return revealRewards({
-          connection: connection,
-        });
+        return getNFTMintKeyAndNameForMintedNFT(payload)
       })
 
-      // 2. receiver has nft with updated metadata.
-      .then(function () {
-        return getMetadata({
-          connection: connection,
-          token: nftPublicKey
-        });
-      })
-      .then(function (metadata) {
-        expect(metadata.uri).toEqual('https://init.uy');
+      .then(function (data) {
+        expect(data.nft).toEqual({
+          mintKey: payload.nftMetadata[0].mint,
+          name: payload.nftMetadata[0].data.name.split("\x00")[0]
+        })
+        return data
       })
 
-      // 3. receiver has reward with updated metadata.
-      .then(function () {
-        return getMetadata({
-          connection: connection,
-          token: rewardPublicKey,
-        });
+      // 2. updater get the membership token account
+      .then(function (data) {
+        return getMembershipNFTAccount(data);
       })
-      .then(function (metadata) {
-        expect(metadata.uri).toEqual('https://init.uy/revealed');
+      .then(function (data) {
+        expect(data.paymentToken).toEqual({
+          mintKey: payload.nftMetadata[0].mint
+        });
+        return data
+      })
+
+      // 3. updater finds the membership NFT name
+      .then(function (data) {
+        return getMembertshipNFTMetadata(data);
+      })
+      .then(function (data) {
+        expect(data.membershipNFT).toEqual({ name: "Pokemon 0" });
+        return data
+      })
+
+      // 4. updater updates mintedNFT, membershipNFT metadata and signs the mintedNFT
+      .then(function (data) {
+        console.log(data);
+      })
+      .then(function (data) {
+        expect()
       })
   });
 });
