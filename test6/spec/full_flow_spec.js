@@ -187,12 +187,6 @@ describe('NFT exchange full flow', function () {
       // 3. receiver has nft ata with balance 1.
   });
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-  it('exchanges NFT for fungible token', function () {
-=======
-=======
->>>>>>> daemon-test
   xit('exchange fails if receiver already got her reward', function () {
   });
 
@@ -200,10 +194,6 @@ describe('NFT exchange full flow', function () {
   });
 
   xit('exchanges NFT for reward', function () {
-<<<<<<< HEAD
->>>>>>> 3bbcf2db392296259234f69728a8759105d39225
-=======
->>>>>>> daemon-test
     return Promise.resolve()
       // 1. receiver exchanges nft at custom function 1.
       .then(function () {

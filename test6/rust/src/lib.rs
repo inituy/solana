@@ -1,3 +1,5 @@
+use borsh::BorshDeserialize;
+use borsh::BorshSerialize;
 use solana_program::entrypoint;
 use solana_program::msg;
 use solana_program::account_info::AccountInfo;
@@ -14,6 +16,13 @@ use spl_token_metadata::state::Metadata;
 // use spl_token_metadata::instruction::update_metadata_accounts;
 // use spl_token_metadata::ID as SPL_TOKEN_METADATA_PROGRAM_ID;
 // use std::io::Error;
+
+
+
+#[derive(BorshSerialize, BorshDeserialize, Debug)]
+pub struct NftAllowanceAccount {
+  used: bool
+}
 
 
 
@@ -115,12 +124,15 @@ fn verify_nft_allowance_account_is_valid(
 
 
 fn verify_nft_allowance_account_is_not_used(
-  _nft_allowance: &AccountInfo,
+  nft_allowance: &AccountInfo,
 ) -> Result<u8, ProgramError> {
+  let data = nft_allowance.try_borrow_mut_data()?;
+  let unpacked: NftAllowanceAccount = NftAllowanceAccount::try_from_slice(&data)?;
+  msg!("{:?}", unpacked);
   Ok(1)
 }
 
-
+ 
 
 fn update_nft_allowance_account_as_used(
 ) -> Result<u8, ProgramError> {
@@ -143,6 +155,15 @@ fn purchase_reward_with_intermediary_token(
 
 
 
+fn verify_receiver_is_signer(
+  receiver: &AccountInfo,
+) -> Result<u8, ProgramError> {
+  if !receiver.is_signer { return Err(ProgramError::Custom(1)); }
+  Ok(1)
+}
+
+
+
 fn process_instruction(
   program_id: &Pubkey,
   accounts: &[AccountInfo],
@@ -158,13 +179,15 @@ fn process_instruction(
   let nft_allowance = next_account_info(account_iter)?;
   // let intermediary_token_ata = next_account_info(account_iter)?;
 
+  verify_receiver_is_signer(&receiver)?; // DONE
   verify_nft_ata_belongs_to_mint(&nft_ata, &nft_mint)?; // DONE!
   verify_nft_ata_belongs_to_receiver(&nft_ata, &receiver)?; // DONE
   verify_nft_ata_balance_is_not_zero(&nft_ata)?; // DONE
   verify_nft_metadata_update_authority_matches(&nft_metadata)?; // DONE
   verify_nft_metadata_belongs_to_mint(&nft_metadata, &nft_mint)?; // DONE!
-  verify_nft_allowance_account_is_valid(&program_id, &nft_mint, &nft_allowance)?; // DOING
-  verify_nft_allowance_account_is_not_used(&nft_allowance)?;
+  // verify_nft_allowance_account_is_owned(&program_id, &nft_allowance);
+  verify_nft_allowance_account_is_valid(&program_id, &nft_mint, &nft_allowance)?; // DONE
+  verify_nft_allowance_account_is_not_used(&nft_allowance)?; // DOING
 
   update_nft_allowance_account_as_used()?;
   mint_intermediary_token_ata_belongs_to_mint()?;

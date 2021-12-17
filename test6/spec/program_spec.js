@@ -1,15 +1,20 @@
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 99999999;
+
 var solana = require('../solana/web3.js')
   , metaplex = require('../metaplex/js')
   , fundWallet = require('../solana/fund_wallet')
+  , createAccount = require('../solana/create_account')
+  , getCreatorKeypair = require('./support/get_creator_keypair')
   , getReceiverKeypair = require('./support/get_receiver_keypair')
   , createToken = require('../spltoken/create_token')
   , createTokenAccount = require('../spltoken/create_token_account')
 
 fdescribe('exchange NFT program', function () {
   var connection = new solana.Connection('https://api.devnet.solana.com')
-    , programId = '68k4mTrd4uVdszH47cnodYmPot6q97rz2jXrG8FJVqEQ';
+    , programId = new solana.PublicKey('68k4mTrd4uVdszH47cnodYmPot6q97rz2jXrG8FJVqEQ');
 
-  var receiverKeypair = getReceiverKeypair()
+  var creatorKeypair = getCreatorKeypair()
+    , receiverKeypair = getReceiverKeypair()
     , nftMintAddress = new solana.PublicKey('J53xXw6rGhWfR9ainyiZ4kJtsYmhsHNzMjNDyJgpSVwD')
     , nftAtaAddress = new solana.PublicKey('BhQTw3jgf1AgU1wPmiJsNSbqcdtFkqKL4SyeFsp64819')
     , nftMetadataAddress
@@ -91,6 +96,44 @@ fdescribe('exchange NFT program', function () {
         console.log(new Date(), 'Different authority NFT metadata address:', diffAuthNftMetadataAddress.toString());
       })
       .catch(console.log);
+  });
+
+
+
+  xit('fails if receiver doesnt sign', function () {
+    return Promise.resolve()
+      .then(function () {
+        console.log(new Date(), 'Getting blockhash...');
+        return connection.getRecentBlockhash();
+      })
+      .then(function (response) {
+        var keys = [
+          { isSigner: false, isWritable: false, pubkey: receiverKeypair.publicKey },
+          { isSigner: false, isWritable: false, pubkey: nftMintAddress },
+          { isSigner: false, isWritable: false, pubkey: nftAtaAddress },
+          { isSigner: false, isWritable: false, pubkey: nftMetadataAddress },
+          { isSigner: false, isWritable: false, pubkey: nftAllowanceAddress },
+          { isSigner: false, isWritable: false, pubkey: intermediaryTokenAtaAddress },
+        ];
+        var signers = [];
+        var trx = new solana.Transaction({
+          feePayer: receiverKeypair.publicKey,
+          recentBlockhash: response.blockhash
+        });
+        trx.add(new solana.TransactionInstruction({
+          programId: new solana.PublicKey(programId),
+          keys: keys,
+          data: Buffer.from('7'),
+        }));
+        return solana.sendAndConfirmTransaction(connection, trx, signers);
+      })
+      .then(function (signature) {
+        expect(signature).toBeUndefined();
+      })
+      .catch(function (error) {
+        // NOTE: Not sure this ever goes to the chain.
+        expect(error).not.toBeUndefined();
+      });
   });
 
 
@@ -399,6 +442,20 @@ fdescribe('exchange NFT program', function () {
   it('gives the reward to the caller', function () {
     return Promise.resolve()
       .then(function () {
+        return connection.getMinimumBalanceForRentExemption(10, "confirmed");
+      })
+      .then(function (minBalance) {
+        return createAccount({
+          connection: connection,
+          payer: receiverKeypair,
+          address: nftAllowanceAddress,
+          space: 10,
+          lamports: minBalance,
+          programId: programId,
+        });
+      })
+      .then(function (response) {
+        console.log(new Date(), 'response');
         console.log(new Date(), 'Getting blockhash...');
         return connection.getRecentBlockhash();
       })
@@ -408,7 +465,7 @@ fdescribe('exchange NFT program', function () {
           { isSigner: false, isWritable: false, pubkey: nftMintAddress },
           { isSigner: false, isWritable: false, pubkey: nftAtaAddress },
           { isSigner: false, isWritable: false, pubkey: nftMetadataAddress },
-          { isSigner: false, isWritable: false, pubkey: nftAllowanceAddress },
+          { isSigner: false, isWritable: true,  pubkey: nftAllowanceAddress },
           { isSigner: false, isWritable: false, pubkey: intermediaryTokenAtaAddress },
         ];
         var signers = [receiverKeypair];
@@ -424,6 +481,7 @@ fdescribe('exchange NFT program', function () {
         return solana.sendAndConfirmTransaction(connection, trx, signers);
       })
       .then(function (signature) {
+        console.log(new Date(), 'Success!', signature);
         expect(signature).not.toBeUndefined();
       })
   });
