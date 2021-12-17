@@ -35,26 +35,16 @@ fn verify_nft_metadata_update_authority_matches(
   nft_metadata: &AccountInfo,
 ) -> Result<u8, ProgramError> {
   let metadata = Metadata::from_account_info(&nft_metadata)?;
-
-  // TODO: This is for sure implemented in some helper function.
   match bs58::decode("HW6oto3fnZuWfFcLaMBRkA4UYChQ8D57LTcHLKS3GmbC").into_vec() {
     Ok(reward_update_authority_vec) => {
-      match String::from_utf8(reward_update_authority_vec) {
-        Ok(reward_update_authority_str) => {
-          let reward_update_authority_slice = reward_update_authority_str.as_bytes();
-          let reward_update_authority = Pubkey::new(&reward_update_authority_slice);
-          msg!("HOLIS {:?} AND {:?}", metadata.update_authority, reward_update_authority);
-          if metadata.update_authority != reward_update_authority {
-            msg!("NFT metadata does not have the correct update authority");
-            return Err(ProgramError::Custom(1));
-          }
-        }
-        _ => {}
+      let reward_update_authority = Pubkey::new(&reward_update_authority_vec[..]);
+      if metadata.update_authority != reward_update_authority {
+        msg!("NFT metadata does not have the correct update authority");
+        return Err(ProgramError::Custom(1));
       }
     }
     _ => {}
   }
-
   Ok(1)
 }
 
@@ -102,8 +92,23 @@ fn verify_nft_ata_balance_is_not_zero(
 
 
 fn verify_nft_allowance_account_is_valid(
-  _nft_allowance: &AccountInfo,
+  program_id: &Pubkey,
+  nft_mint: &AccountInfo,
+  nft_allowance: &AccountInfo,
 ) -> Result<u8, ProgramError> {
+  let pda = Pubkey::find_program_address(
+    &[
+      &"allowance".as_bytes(),
+      &program_id.as_ref(),
+      &nft_mint.key.as_ref(),
+    ],
+    &program_id,
+  );
+  let expected_address = pda.0;
+  if *nft_allowance.key != expected_address {
+    msg!("NFT allowance account is not valid");
+    return Err(ProgramError::Custom(1));
+  }
   Ok(1)
 }
 
@@ -139,7 +144,7 @@ fn purchase_reward_with_intermediary_token(
 
 
 fn process_instruction(
-  _program_id: &Pubkey,
+  program_id: &Pubkey,
   accounts: &[AccountInfo],
   _instruction_data: &[u8]
 ) -> ProgramResult {
@@ -156,9 +161,9 @@ fn process_instruction(
   verify_nft_ata_belongs_to_mint(&nft_ata, &nft_mint)?; // DONE!
   verify_nft_ata_belongs_to_receiver(&nft_ata, &receiver)?; // DONE
   verify_nft_ata_balance_is_not_zero(&nft_ata)?; // DONE
-  verify_nft_metadata_update_authority_matches(&nft_metadata)?; // DOING
+  verify_nft_metadata_update_authority_matches(&nft_metadata)?; // DONE
   verify_nft_metadata_belongs_to_mint(&nft_metadata, &nft_mint)?; // DONE!
-  verify_nft_allowance_account_is_valid(&nft_allowance)?;
+  verify_nft_allowance_account_is_valid(&program_id, &nft_mint, &nft_allowance)?; // DOING
   verify_nft_allowance_account_is_not_used(&nft_allowance)?;
 
   update_nft_allowance_account_as_used()?;

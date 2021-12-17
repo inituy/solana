@@ -55,7 +55,7 @@ fdescribe('exchange NFT program', function () {
           [ Buffer.from('allowance'),
             new solana.PublicKey(programId).toBuffer(),
             new solana.PublicKey(nftMintAddress).toBuffer() ],
-          metaplex.programs.metadata.MetadataProgram.PUBKEY
+          new solana.PublicKey(programId)
         );
       })
       .then(function (response) {
@@ -298,7 +298,7 @@ fdescribe('exchange NFT program', function () {
 
   // NOTE: Caller can pass an NFT that is not the NFT that the program is
   // exchanging for rewards. In that case, we will not accept the NFT.
-  it('fails if nft update authority doesnt match expected', function () {
+  xit('fails if nft update authority doesnt match expected', function () {
     return Promise.resolve()
       .then(function () {
         console.log(new Date(), 'Getting blockhash...');
@@ -355,9 +355,9 @@ fdescribe('exchange NFT program', function () {
       .then(function (response) {
         var keys = [
           { isSigner: true,  isWritable: false, pubkey: receiverKeypair.publicKey },
-          { isSigner: false, isWritable: false, pubkey: notOwnedNftMintAddress },
+          { isSigner: false, isWritable: false, pubkey: nftMintAddress },
+          { isSigner: false, isWritable: false, pubkey: nftAtaAddress },
           { isSigner: false, isWritable: false, pubkey: nftMetadataAddress },
-          { isSigner: false, isWritable: false, pubkey: wrongNftAllowanceAddress },
           { isSigner: false, isWritable: false, pubkey: wrongNftAllowanceAddress },
           { isSigner: false, isWritable: false, pubkey: intermediaryTokenAtaAddress },
         ];
@@ -377,7 +377,9 @@ fdescribe('exchange NFT program', function () {
         expect(signature).toBeUndefined();
       })
       .catch(function (error) {
+        console.log(error);
         expect(error).not.toBeUndefined();
+        expect(error.logs[1].indexOf('NFT allowance account is not valid')).not.toBe(-1);
       })
   });
 
