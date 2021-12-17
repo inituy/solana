@@ -51,7 +51,6 @@ describe('NFT exchange full flow', function () {
 
   var purchaseNft = require('../app/purchase_nft')
     , exchangeNft = require('../app/exchange_nft')
-    , purchaseReward = require('../app/purchase_reward')
     , revealRewards = require('../app/reveal_rewards')
 
   beforeAll(function () {
@@ -148,13 +147,14 @@ describe('NFT exchange full flow', function () {
         rewardCandyMachine = candyMachine;
       })
 
+      // TODO: This should not be part of pre-condition, should be part of test.
       // 7. mint nft to creator
-      .then(function () { console.log(new Date(), 'Minting NFT to creator...'); })
+      .then(function () { console.log(new Date(), 'Minting NFT to receiver...'); })
       .then(function () {
         return mintCandyMachineNft({
-          rootPath: path.join(__dirname, './support/reward'),
+          rootPath: path.join(__dirname, './support/nft'),
           environment: 'devnet',
-          owner: creatorKeypair,
+          owner: receiverKeypair,
         });
       })
 
@@ -179,14 +179,24 @@ describe('NFT exchange full flow', function () {
       // 3. receiver has nft ata with balance 1.
   });
 
+<<<<<<< HEAD
   it('exchanges NFT for fungible token', function () {
+=======
+  xit('exchange fails if receiver already got her reward', function () {
+  });
+
+  xit('exchange fails if receiver passes NFT not owned by her', function () {
+  });
+
+  xit('exchanges NFT for reward', function () {
+>>>>>>> 3bbcf2db392296259234f69728a8759105d39225
     return Promise.resolve()
       // 1. receiver exchanges nft at custom function 1.
       .then(function () {
         return exchangeNft({
           connection: connection,
-          token: nftPublicKey,
-          owner: receiverKeypair.secretKey,
+          nft: nftPublicKey,
+          owner: receiverKeypair,
         });
       })
 
@@ -214,54 +224,6 @@ describe('NFT exchange full flow', function () {
       .then(function (metadata) {
         expect(metadata.data.data.uri).toEqual('https://banafederico.com');
       });
-  });
-
-  xit('exchange fungible token for reward', function () {
-    return Promise.resolve()
-      // 1. receiver exchanges fungible token at candy machine.
-      .then(function () {
-        return purchaseReward({
-          connection: connection,
-          purchaser: receiverKeypair,
-        });
-      })
-
-      // 2. receiver has updated balance after paying for fees.
-      .then(function () {
-        return getBalance({
-          connection: connection,
-          wallet: receiverKeypair.publicKey
-        })
-      })
-      .then(function (balance) {
-        expect(balance).toBe(receiverInitialBalance - 1);
-      })
-
-      // 3. receiver has fungible token ata with balance 0.
-      .then(function () {
-        return getAssociatedTokenAccount({
-          connection: connection,
-          token: fungibleTokenPublicKey,
-          wallet: receiverKeypair.publicKey,
-        });
-      })
-      .then(function (accountInfo) {
-        expect(accountInfo).not.toBeNull();
-        expect(accountInfo.balance).toBe(0);
-      })
-
-      // 4. receiver has reward ata with balance 1.
-      .then(function () {
-        return getAssociatedTokenAccount({
-          connection: connection,
-          token: rewardPublicKey,
-          wallet: receiverKeypair.publicKey,
-        });
-      })
-      .then(function (accountInfo) {
-        expect(accountInfo).not.toBeNull();
-        expect(accountInfo.balance).toBe(1);
-      })
   });
 
   xit('reward is revealed', function () {

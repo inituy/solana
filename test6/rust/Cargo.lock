@@ -150,6 +150,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "476e9cd489f9e121e02ffa6014a8ef220ecb15c05ed23fc34cca13925dc283fb"
 
 [[package]]
+name = "bs58"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "771fe0050b883fcc3ea2359b1a96bcfbc090b7116eae7c3c512c7a083fdf23d3"
+
+[[package]]
 name = "bv"
 version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -721,7 +727,7 @@ version = "1.8.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f03105023ee2e50eef15d4d43fa6d3acbbc5265f570ebb021d0af9c62e6f5189"
 dependencies = [
- "bs58",
+ "bs58 0.3.1",
  "bv",
  "generic-array 0.14.4",
  "log",
@@ -769,7 +775,7 @@ dependencies = [
  "blake3",
  "borsh",
  "borsh-derive",
- "bs58",
+ "bs58 0.3.1",
  "bv",
  "bytemuck",
  "curve25519-dalek",
@@ -801,11 +807,21 @@ version = "1.8.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "868cdefdbb43424b4915b8aaa767a112d62537d8d2c6d1d4d01a647e4842ed7b"
 dependencies = [
- "bs58",
+ "bs58 0.3.1",
  "proc-macro2",
  "quote",
  "rustversion",
  "syn",
+]
+
+[[package]]
+name = "spl-associated-token-account"
+version = "1.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "393e2240d521c3dd770806bff25c2c00d761ac962be106e14e22dd912007f428"
+dependencies = [
+ "solana-program",
+ "spl-token",
 ]
 
 [[package]]
@@ -819,6 +835,36 @@ dependencies = [
  "num-traits",
  "num_enum",
  "solana-program",
+ "thiserror",
+]
+
+[[package]]
+name = "spl-token-metadata"
+version = "0.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bf729ee1809c761a9fc7d0c15cdb9f8caf4f53b543a035867ce31c8c4eb345e4"
+dependencies = [
+ "arrayref",
+ "borsh",
+ "num-derive",
+ "num-traits",
+ "solana-program",
+ "spl-token",
+ "spl-token-vault",
+ "thiserror",
+]
+
+[[package]]
+name = "spl-token-vault"
+version = "0.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "19326eb47c4d0be70265ad0fe47d4571a1625d843b333f785c43483eb673ea59"
+dependencies = [
+ "borsh",
+ "num-derive",
+ "num-traits",
+ "solana-program",
+ "spl-token",
  "thiserror",
 ]
 
@@ -852,8 +898,12 @@ dependencies = [
 name = "test4"
 version = "0.1.0"
 dependencies = [
+ "borsh",
+ "bs58 0.4.0",
  "solana-program",
+ "spl-associated-token-account",
  "spl-token",
+ "spl-token-metadata",
 ]
 
 [[package]]
