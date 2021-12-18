@@ -100,7 +100,7 @@ fdescribe('exchange NFT program', function () {
 
 
 
-  xit('fails if receiver doesnt sign', function () {
+  it('fails if receiver doesnt sign', function () {
     return Promise.resolve()
       .then(function () {
         console.log(new Date(), 'Getting blockhash...');
@@ -138,7 +138,7 @@ fdescribe('exchange NFT program', function () {
 
 
 
-  xit('fails if nft ata doesnt belong to nft mint', function () {
+  it('fails if nft ata doesnt belong to nft mint', function () {
     var wrongNftAtaAddress;
     return Promise.resolve()
       .then(function () {
@@ -200,7 +200,7 @@ fdescribe('exchange NFT program', function () {
   // NOTE: Caller can pass an NFT associated token account that actually
   // belongs to someone else. In that case, we will not accept the NFT
   // associated token account.
-  xit('fails if nft ata doesnt belong to receiver', function () {
+  it('fails if nft ata doesnt belong to receiver', function () {
     var someoneElsesKeypair = solana.Keypair.generate();
     return Promise.resolve()
       .then(function () {
@@ -261,7 +261,7 @@ fdescribe('exchange NFT program', function () {
 
   // NOTE: Caller can pass an NFT for which they don't have a balance. In that
   // case we will not accept the NFT.
-  xit('fails if nft ata balance is 0', function () {
+  it('fails if nft ata balance is 0', function () {
     return Promise.resolve()
       .then(function () {
         console.log(new Date(), 'Getting blockhash...');
@@ -301,7 +301,7 @@ fdescribe('exchange NFT program', function () {
 
   // NOTE: Caller can pass an NFT metadata account that does not belong to the
   // NFT. In that chase, we will not accept the NFT metadata.
-  xit('fails if nft metadata does not match nft mint', function () {
+  it('fails if nft metadata does not match nft mint', function () {
     return Promise.resolve()
       .then(function () {
         console.log(new Date(), 'Getting blockhash...');
@@ -341,7 +341,7 @@ fdescribe('exchange NFT program', function () {
 
   // NOTE: Caller can pass an NFT that is not the NFT that the program is
   // exchanging for rewards. In that case, we will not accept the NFT.
-  xit('fails if nft update authority doesnt match expected', function () {
+  it('fails if nft update authority doesnt match expected', function () {
     return Promise.resolve()
       .then(function () {
         console.log(new Date(), 'Getting blockhash...');
@@ -352,6 +352,10 @@ fdescribe('exchange NFT program', function () {
           { isSigner: true,  isWritable: false, pubkey: receiverKeypair.publicKey },
           { isSigner: false, isWritable: false, pubkey: diffAuthNftMintAddress },
           { isSigner: false, isWritable: false, pubkey: diffAuthNftAtaAddress },
+          // TODO: This test fails because this metadata account doesnt belong
+          // to the NFT mint it's supposed to belong to, so that verification
+          // runs and makes this test fail because update authority can be
+          // checked.
           { isSigner: false, isWritable: false, pubkey: diffAuthNftMetadataAddress },
           { isSigner: false, isWritable: false, pubkey: nftAllowanceAddress },
           { isSigner: false, isWritable: false, pubkey: intermediaryTokenAtaAddress },
@@ -388,7 +392,7 @@ fdescribe('exchange NFT program', function () {
   // NOTE: Caller can pass an allowance account with an address that does not
   // match the required derived address: // ['reward_allowance', pid, nft]
   // In that case, we will not accept the allowance account.
-  xit('fails if allowance ata is invalid', function () {
+  it('fails if allowance ata is invalid', function () {
     var wrongNftAllowanceAddress = solana.Keypair.generate().publicKey;
     return Promise.resolve()
       .then(function () {
@@ -420,7 +424,6 @@ fdescribe('exchange NFT program', function () {
         expect(signature).toBeUndefined();
       })
       .catch(function (error) {
-        console.log(error);
         expect(error).not.toBeUndefined();
         expect(error.logs[1].indexOf('NFT allowance account is not valid')).not.toBe(-1);
       })
@@ -429,33 +432,32 @@ fdescribe('exchange NFT program', function () {
   // NOTE: Caller can pass the allowance account twice, which means they
   // already got their reward. In that case, we will not accept the allowance
   // account.
-  xit('fails if allowance ata was already used');
+  it('fails if allowance ata was already used');
 
   // NOTE: Caller can pass an intermediary token associated token account that
   // doesnt belong to the intermediary token mint. In that case, we will not
   // accept the intermediary token associated account.
-  xit('fails if intermediary token ata is for wrong mint');
+  it('fails if intermediary token ata is for wrong mint');
 
   // NOTE: If caller passes all the right values:
   // * Allowance associated token account will be marked as used.
   // * Reward is minted using candy machine (`mint` instruction is called).
   it('gives the reward to the caller', function () {
     return Promise.resolve()
-      .then(function () {
-        return connection.getMinimumBalanceForRentExemption(10, "confirmed");
-      })
-      .then(function (minBalance) {
-        return createAccount({
-          connection: connection,
-          payer: receiverKeypair,
-          address: nftAllowanceAddress,
-          space: 10,
-          lamports: minBalance,
-          programId: programId,
-        });
-      })
+      // .then(function () {
+      //   return connection.getMinimumBalanceForRentExemption(10, "confirmed");
+      // })
+      // .then(function (minBalance) {
+      //   return createAccount({
+      //     connection: connection,
+      //     payer: receiverKeypair,
+      //     address: nftAllowanceAddress,
+      //     space: 10,
+      //     lamports: minBalance,
+      //     programId: programId,
+      //   });
+      // })
       .then(function (response) {
-        console.log(new Date(), 'response');
         console.log(new Date(), 'Getting blockhash...');
         return connection.getRecentBlockhash();
       })

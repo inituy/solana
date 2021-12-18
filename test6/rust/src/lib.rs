@@ -123,6 +123,19 @@ fn verify_nft_allowance_account_is_valid(
 
 
 
+fn verify_nft_allowance_account_is_owned(
+  program_id: &Pubkey,
+  nft_allowance: &AccountInfo,
+) -> Result<u8, ProgramError> {
+  if *nft_allowance.key != *program_id {
+    msg!("NFT allowance account not owned by program");
+    return Err(ProgramError::Custom(1));
+  }
+  Ok(1)
+}
+
+
+
 fn verify_nft_allowance_account_is_not_used(
   nft_allowance: &AccountInfo,
 ) -> Result<u8, ProgramError> {
@@ -141,7 +154,7 @@ fn update_nft_allowance_account_as_used(
 
 
 
-fn mint_intermediary_token_ata_belongs_to_mint(
+fn mint_intermediary_token(
 ) -> Result<u8, ProgramError> {
   Ok(1)
 }
@@ -183,14 +196,14 @@ fn process_instruction(
   verify_nft_ata_belongs_to_mint(&nft_ata, &nft_mint)?; // DONE!
   verify_nft_ata_belongs_to_receiver(&nft_ata, &receiver)?; // DONE
   verify_nft_ata_balance_is_not_zero(&nft_ata)?; // DONE
-  verify_nft_metadata_update_authority_matches(&nft_metadata)?; // DONE
   verify_nft_metadata_belongs_to_mint(&nft_metadata, &nft_mint)?; // DONE!
-  // verify_nft_allowance_account_is_owned(&program_id, &nft_allowance);
+  verify_nft_metadata_update_authority_matches(&nft_metadata)?; // DONE
+  verify_nft_allowance_account_is_owned(&program_id, &nft_allowance)?;
   verify_nft_allowance_account_is_valid(&program_id, &nft_mint, &nft_allowance)?; // DONE
   verify_nft_allowance_account_is_not_used(&nft_allowance)?; // DOING
 
   update_nft_allowance_account_as_used()?;
-  mint_intermediary_token_ata_belongs_to_mint()?;
+  mint_intermediary_token()?;
   purchase_reward_with_intermediary_token()?;
 
   Ok(())
