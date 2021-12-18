@@ -2,6 +2,7 @@ jasmine.DEFAULT_TIMEOUT_INTERVAL = 99999999;
 
 var solana = require('../solana/web3.js')
   , metaplex = require('../metaplex/js')
+  , spltoken = require('../spltoken/spltoken')
   , fundWallet = require('../solana/fund_wallet')
   , createAccount = require('../solana/create_account')
   , getCreatorKeypair = require('./support/get_creator_keypair')
@@ -19,6 +20,7 @@ fdescribe('exchange NFT program', function () {
     , nftAtaAddress = new solana.PublicKey('BhQTw3jgf1AgU1wPmiJsNSbqcdtFkqKL4SyeFsp64819')
     , nftMetadataAddress
     , nftAllowanceAddress
+    , intermediaryTokenMintAddress
     , intermediaryTokenAtaAddress = solana.Keypair.generate().publicKey;
 
   // NOTE: NFT associated token account that was previously emptied.
@@ -58,9 +60,9 @@ fdescribe('exchange NFT program', function () {
       .then(function () {
         return solana.PublicKey.findProgramAddress(
           [ Buffer.from('allowance'),
-            new solana.PublicKey(programId).toBuffer(),
+            programId.toBuffer(),
             new solana.PublicKey(nftMintAddress).toBuffer() ],
-          new solana.PublicKey(programId)
+          programId,
         );
       })
       .then(function (response) {
@@ -95,6 +97,45 @@ fdescribe('exchange NFT program', function () {
         diffAuthNftMetadataAddress = response[0];
         console.log(new Date(), 'Different authority NFT metadata address:', diffAuthNftMetadataAddress.toString());
       })
+
+      // NOTE: Initialize
+      .then(function () {
+        return solana.PublicKey.findProgramAddress(
+          [ Buffer.from('imtm5'), programId.toBuffer() ],
+          programId
+        );
+      })
+      .then(function (response) {
+        intermediaryTokenMintAddress = response[0];
+        console.log(new Date(), 'Intermediary token mint address', intermediaryTokenMintAddress.toString());
+      })
+      .then(function () {
+        return connection.getRecentBlockhash();
+      })
+      .then(function (response) {
+        var keys = [
+          { isSigner: true,  isWritable: true,  pubkey: creatorKeypair.publicKey },
+          { isSigner: false, isWritable: true,  pubkey: intermediaryTokenMintAddress },
+          { isSigner: false, isWritable: false, pubkey: solana.SystemProgram.programId },
+          { isSigner: false, isWritable: false, pubkey: spltoken.TOKEN_PROGRAM_ID },
+          { isSigner: false, isWritable: false, pubkey: solana.SYSVAR_RENT_PUBKEY },
+        ];
+        var signers = [creatorKeypair];
+        var trx = new solana.Transaction({
+          feePayer: creatorKeypair.publicKey,
+          recentBlockhash: response.blockhash
+        });
+        trx.add(new solana.TransactionInstruction({
+          programId: programId,
+          keys: keys,
+          data: Buffer.from('1'),
+        }));
+        console.log(new Date(), 'Initializing...');
+        return solana.sendAndConfirmTransaction(connection, trx, signers);
+      })
+      .then(function (signature) {
+        console.log(new Date(), 'Initialized.', signature);
+      })
       .catch(console.log);
   });
 
@@ -121,9 +162,9 @@ fdescribe('exchange NFT program', function () {
           recentBlockhash: response.blockhash
         });
         trx.add(new solana.TransactionInstruction({
-          programId: new solana.PublicKey(programId),
+          programId: programId,
           keys: keys,
-          data: Buffer.from('7'),
+          data: Buffer.from('2'),
         }));
         return solana.sendAndConfirmTransaction(connection, trx, signers);
       })
@@ -180,9 +221,9 @@ fdescribe('exchange NFT program', function () {
           recentBlockhash: response.blockhash
         });
         trx.add(new solana.TransactionInstruction({
-          programId: new solana.PublicKey(programId),
+          programId: programId,
           keys: keys,
-          data: Buffer.from('7'),
+          data: Buffer.from('2'),
         }));
         return solana.sendAndConfirmTransaction(connection, trx, signers);
       })
@@ -242,9 +283,9 @@ fdescribe('exchange NFT program', function () {
           recentBlockhash: response.blockhash
         });
         trx.add(new solana.TransactionInstruction({
-          programId: new solana.PublicKey(programId),
+          programId: programId,
           keys: keys,
-          data: Buffer.from('7'),
+          data: Buffer.from('2'),
         }));
         return solana.sendAndConfirmTransaction(connection, trx, signers);
       })
@@ -282,9 +323,9 @@ fdescribe('exchange NFT program', function () {
           recentBlockhash: response.blockhash
         });
         trx.add(new solana.TransactionInstruction({
-          programId: new solana.PublicKey(programId),
+          programId: programId,
           keys: keys,
-          data: Buffer.from('7'),
+          data: Buffer.from('2'),
         }));
         return solana.sendAndConfirmTransaction(connection, trx, signers);
       })
@@ -322,9 +363,9 @@ fdescribe('exchange NFT program', function () {
           recentBlockhash: response.blockhash
         });
         trx.add(new solana.TransactionInstruction({
-          programId: new solana.PublicKey(programId),
+          programId: programId,
           keys: keys,
-          data: Buffer.from('7'),
+          data: Buffer.from('2'),
         }));
         return solana.sendAndConfirmTransaction(connection, trx, signers);
       })
@@ -366,9 +407,9 @@ fdescribe('exchange NFT program', function () {
           recentBlockhash: response.blockhash
         });
         trx.add(new solana.TransactionInstruction({
-          programId: new solana.PublicKey(programId),
+          programId: programId,
           keys: keys,
-          data: Buffer.from('7'),
+          data: Buffer.from('2'),
         }));
         return solana.sendAndConfirmTransaction(connection, trx, signers);
       })
@@ -414,9 +455,9 @@ fdescribe('exchange NFT program', function () {
           recentBlockhash: response.blockhash
         });
         trx.add(new solana.TransactionInstruction({
-          programId: new solana.PublicKey(programId),
+          programId: programId,
           keys: keys,
-          data: Buffer.from('7'),
+          data: Buffer.from('2'),
         }));
         return solana.sendAndConfirmTransaction(connection, trx, signers);
       })
@@ -442,7 +483,7 @@ fdescribe('exchange NFT program', function () {
   // NOTE: If caller passes all the right values:
   // * Allowance associated token account will be marked as used.
   // * Reward is minted using candy machine (`mint` instruction is called).
-  it('gives the reward to the caller', function () {
+  fit('gives the reward to the caller', function () {
     return Promise.resolve()
       // .then(function () {
       //   return connection.getMinimumBalanceForRentExemption(10, "confirmed");
@@ -476,9 +517,9 @@ fdescribe('exchange NFT program', function () {
           recentBlockhash: response.blockhash
         });
         trx.add(new solana.TransactionInstruction({
-          programId: new solana.PublicKey(programId),
+          programId: programId,
           keys: keys,
-          data: Buffer.from('7'),
+          data: Buffer.from('2'),
         }));
         return solana.sendAndConfirmTransaction(connection, trx, signers);
       })
