@@ -50,11 +50,17 @@ pub fn exchange(
   let intermediary_token_ata = next_account_info(account_iter)?;
   let token_program = next_account_info(account_iter)?;
 
-  // let reward_candy_machine = next_account_info(account_iter)?;
-  // let reward_candy_machine_config = next_account_info(account_iter)?;
-  // let reward_candy_machine_treasury = next_account_info(account_iter)?;
-  // let reward_mint = next_account_info(account_iter)?;
-  // let reward_master_edition = next_account_info(account_iter)?;
+  let candy_machine_program = next_account_info(account_iter)?;
+  let reward_candy_machine_config = next_account_info(account_iter)?;
+  let reward_candy_machine = next_account_info(account_iter)?;
+  let reward_candy_machine_treasury = next_account_info(account_iter)?;
+  let reward_metadata = next_account_info(account_iter)?;
+  let reward_mint = next_account_info(account_iter)?;
+  let reward_master_edition = next_account_info(account_iter)?;
+  let token_metadata_program = next_account_info(account_iter)?;
+  let system_program = next_account_info(account_iter)?;
+  let rent = next_account_info(account_iter)?;
+  let clock = next_account_info(account_iter)?;
 
   verify_receiver_is_signer(&receiver)?; // DONE
   verify_nft_ata_belongs_to_mint(&nft_ata, &nft_mint)?; // DONE!
@@ -77,12 +83,20 @@ pub fn exchange(
   )?;
 
   purchase_reward_with_intermediary_token(
-    // &receiver,
-    // &reward_candy_machine,
-    // &reward_candy_machine_config,
-    // &reward_candy_machine_treasury,
-    // &reward_mint,
-    // &reward_master_edition,
+    &candy_machine_program,
+    &reward_candy_machine_config,
+    &reward_candy_machine,
+    &receiver,
+    &reward_candy_machine_treasury,
+    &reward_metadata,
+    &reward_mint,
+    &reward_master_edition,
+    &token_metadata_program,
+    &token_program,
+    &system_program,
+    &rent,
+    &clock,
+    &intermediary_token_ata,
   )?;
 
   Ok(())

@@ -191,8 +191,8 @@ describe('exchange NFT program', function () {
         console.log(new Date(), 'Creating reward candy machine...');
         return createRewardCandyMachine({
           creatorKeypair: creatorKeypair,
-          //creatorIntermediaryTokenAtaAddress: creatorIntermediaryTokenAtaAddress,
-          //intermediaryTokenMintAddress: intermediaryTokenMintAddress,
+          creatorIntermediaryTokenAtaAddress: creatorIntermediaryTokenAtaAddress,
+          intermediaryTokenMintAddress: intermediaryTokenMintAddress,
         });
       })
       .then(function (candyMachine) {
@@ -635,19 +635,19 @@ describe('exchange NFT program', function () {
           [], // multisig
           1,  // amount
         ));
-        instructions.push(spltoken.Token.createApproveInstruction(
-          spltoken.TOKEN_PROGRAM_ID,
-          rewardAtaAddress,
-          rewardCandyMachineTransferAuthorityKeypair.publicKey,
-          receiverKeypair.publicKey,
-          [], // multisig
-          1,  // max amount
-        ));
+        // instructions.push(spltoken.Token.createApproveInstruction(
+        //   spltoken.TOKEN_PROGRAM_ID,
+        //   rewardAtaAddress,
+        //   rewardCandyMachineTransferAuthorityKeypair.publicKey,
+        //   receiverKeypair.publicKey,
+        //   [], // multisig
+        //   1,  // max amount
+        // ));
         instructions.push(new solana.TransactionInstruction({
           programId: programId,
           data: Buffer.from('2'),
           keys: [
-            { isSigner: true,  isWritable: false, pubkey: receiverKeypair.publicKey },
+            { isSigner: true,  isWritable: true,  pubkey: receiverKeypair.publicKey },
             { isSigner: false, isWritable: false, pubkey: nftMintAddress },
             { isSigner: false, isWritable: false, pubkey: nftAtaAddress },
             { isSigner: false, isWritable: false, pubkey: nftMetadataAddress },
@@ -656,29 +656,18 @@ describe('exchange NFT program', function () {
             { isSigner: false, isWritable: false, pubkey: intermediaryTokenMintAuthorityAddress },
             { isSigner: false, isWritable: true,  pubkey: receiverIntermediaryTokenAtaAddress },
             { isSigner: false, isWritable: false, pubkey: spltoken.TOKEN_PROGRAM_ID },
-          ],
-        }));
-        instructions.push(new solana.TransactionInstruction({
-          programId: rewardCandyMachineProgramAddress,
-          data: Buffer.from([ 211,  57,  6, 167, 15, 219, 35, 251 ]),
-          keys: [
+            { isSigner: false, isWritable: false, pubkey: rewardCandyMachineProgramAddress },
             { isSigner: false, isWritable: false, pubkey: rewardCandyMachineConfigAddress },
             { isSigner: false, isWritable: true,  pubkey: rewardCandyMachineAddress },
-            { isSigner: true,  isWritable: true,  pubkey: receiverKeypair.publicKey },
-            { isSigner: false, isWritable: true,  pubkey: creatorKeypair.publicKey }, // wallet/treasury
+            { isSigner: false, isWritable: true,  pubkey: creatorIntermediaryTokenAtaAddress }, // wallet/treasury
             { isSigner: false, isWritable: true,  pubkey: rewardMetadataAddress },
             { isSigner: true,  isWritable: true,  pubkey: rewardMintKeypair.publicKey },
-            { isSigner: true,  isWritable: true,  pubkey: receiverKeypair.publicKey }, // mint authority
-            { isSigner: true,  isWritable: true,  pubkey: receiverKeypair.publicKey }, // update authority
             { isSigner: false, isWritable: true,  pubkey: rewardMasterEditionAddress },
             { isSigner: false, isWritable: false, pubkey: metaplex.programs.metadata.MetadataProgram.PUBKEY },
-            { isSigner: false, isWritable: false, pubkey: spltoken.TOKEN_PROGRAM_ID },
             { isSigner: false, isWritable: false, pubkey: solana.SystemProgram.programId },
             { isSigner: false, isWritable: false, pubkey: solana.SYSVAR_RENT_PUBKEY },
             { isSigner: false, isWritable: false, pubkey: solana.SYSVAR_CLOCK_PUBKEY },
-            //{ isSigner: false, isWritable: true,  pubkey: receiverIntermediaryTokenAtaAddress },
-            //{ isSigner: true,  isWritable: true,  pubkey: receiverKeypair.publicKey },
-          ]
+          ],
         }));
       })
 
@@ -687,7 +676,6 @@ describe('exchange NFT program', function () {
         signers.push(receiverKeypair);
         signers.push(rewardMintKeypair);
       })
-
 
       // NOTE:
       .then(function () {
