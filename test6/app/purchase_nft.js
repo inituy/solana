@@ -20,7 +20,7 @@ var mint = solana.Keypair.generate()
 module.exports = function (payload) {
   return Promise.resolve(payload)
     .then(function () {
-      // Finds ATA between buyer and NFT
+      // Finds ATA between buyer and NFT.
       var owner = payload.owner;
       return solana.PublicKey.findProgramAddress(
         [owner.publicKey.toBuffer(), splToken.TOKEN_PROGRAM_ID.toBuffer(), mint.publicKey.toBuffer()],
@@ -32,6 +32,7 @@ module.exports = function (payload) {
       return payload
     })
     .then(function (data) {
+      // Finds the candyMachine address.
       var configAddress = new solana.PublicKey(payload.nftCandyMachine.program.config)
       var uuid = payload.nftCandyMachine.program.uuid
       return solana.PublicKey.findProgramAddress(
@@ -44,6 +45,7 @@ module.exports = function (payload) {
       return payload
     })
     .then(async function (data) {
+      // Finds wallet and defines provider.
       const wallet = new anchor.Wallet(payload.candyMachineAddress)
       const provider = new anchor.Provider(payload.connection, wallet, {
         preflightCommitment: 'recent',
@@ -54,6 +56,7 @@ module.exports = function (payload) {
       return payload
     })
     .then(function () {
+      // Finds the candy machine program with all instructions, rpc and accounts
       const program = new anchor.Program(
         payload.candyMachineIdl,
         CANDY_MACHINE_PROGRAM_ID,
@@ -63,6 +66,7 @@ module.exports = function (payload) {
       return payload
     })
     .then(async function () {
+      // Defines the candy machine.
       payload.candyMachine = await payload.loadCandyProgram.account.candyMachine.fetch(
         payload.candyMachineAddress
       )
@@ -70,6 +74,8 @@ module.exports = function (payload) {
     })
     .then(async function (params) {
       const instructions = [
+        // Here we create the instructions for the account that 
+        // will be used for the nft.
         solana.SystemProgram.createAccount({
           fromPubkey: payload.owner.publicKey,
           newAccountPubkey: mint.publicKey,
@@ -81,6 +87,8 @@ module.exports = function (payload) {
           programId: splToken.TOKEN_PROGRAM_ID
         }),
 
+        // Here we create the instructions for the mint 
+        // with balance 0
         splToken.Token.createInitMintInstruction(
           splToken.TOKEN_PROGRAM_ID,
           mint.publicKey,
@@ -88,14 +96,15 @@ module.exports = function (payload) {
           payload.owner.publicKey,
           payload.owner.publicKey,
         ),
-
+        
+        // Instructions to create an ATA
         createAssociatedTokenAccountInstruction(
           payload.userTokenAccountAddress,
           payload.owner.publicKey,
           payload.owner.publicKey,
           mint.publicKey
         ),
-
+        // Instructions to mint balance 1
         splToken.Token.createInitMintInstruction(
           splToken.TOKEN_PROGRAM_ID,
           mint.publicKey,
@@ -113,6 +122,7 @@ module.exports = function (payload) {
       if (payload.candyMachine.tokenMint) {
         const transferAuthority = solana.Keypair.generate();
 
+        // Here we find the ATA between candyMachine and the buyer
         payload.tokenAccount = solana.PublicKey.findProgramAddress(
          [
            payload.owner.publicKey.toBuffer(),
@@ -121,7 +131,7 @@ module.exports = function (payload) {
          ],
           SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID
         )
-
+         // This are signers for the transactions.
         remainingAccounts.push({
           pubkey: payload.tokenAccount,
           isWritable: true,
@@ -134,6 +144,7 @@ module.exports = function (payload) {
         });
 
         payload.instructions.push(
+          // Approval instruction
           splToken.Token.createApproveInstruction(
             splToken.TOKEN_PROGRAM_ID,
             payload.tokenAccount,
@@ -149,6 +160,7 @@ module.exports = function (payload) {
       return payload
     })
     .then(async function () {
+      // Finds metadata address
       const metadataAddress = await solana.PublicKey.findProgramAddress(
         [
           Buffer.from('metadata'),
@@ -158,6 +170,8 @@ module.exports = function (payload) {
         ],
         TOKEN_METADATA_PROGRAM_ID,
       );
+
+      // Finds master edition for the NFT created
       const masterEdition = await solana.PublicKey.findProgramAddress(
         [
           Buffer.from('metadata'),
@@ -168,6 +182,8 @@ module.exports = function (payload) {
         TOKEN_METADATA_PROGRAM_ID,
       )
       var remainingAccounts = payload.remainingAccounts
+      // Creates the instructions for mintNft and organice the accounts
+      // received on params
       payload.instructions.push(
         payload.loadCandyProgram.instruction.mintNft({
           accounts: {
@@ -194,7 +210,7 @@ module.exports = function (payload) {
     .then(function () {
       if (payload.tokenAccount) {
         payload.instructions.push(
-          Token.createRevokeInstruction(
+          splToekn.Token.createRevokeInstruction(
             splToken.TOKEN_PROGRAM_ID,
             payload.tokenAccount,
             payload.owner.publicKey,
@@ -205,6 +221,7 @@ module.exports = function (payload) {
       return payload
     })
     .then(function name(params) {
+      // This is currently work in prograss, but it send the transactio 
       return sendTransactionWithRetryWithKeypair(
         payload.connection,
         payload.owner,
