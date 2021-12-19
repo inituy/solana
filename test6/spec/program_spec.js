@@ -30,7 +30,7 @@ describe('exchange NFT program', function () {
 
   // NOTE: Intermediary token mint that is configured on the reward candy
   // machine as payment token.
-  var intermediaryTokenMintAddress // = new solana.PublicKey('4XpCHLv7ZdWmLMf2JRQeZNrnWbyqjNXXbmg7YDRRSeao')
+  var intermediaryTokenMintAddress
     , intermediaryTokenMintAuthorityAddress;
 
   // NOTE: NFT associated token account that was previously emptied.
