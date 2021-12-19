@@ -19,6 +19,8 @@ var getCreatorKeypair = require('./support/get_creator_keypair')
   , forgetRewardCandyMachine = require('./support/forget_reward_candy_machine')
   , createRewardCandyMachine = require('./support/create_reward_candy_machine')
 
+var exchangeNft = require('../app/exchange_nft.js');
+
 describe('exchange NFT program', function () {
   var connection = new solana.Connection('https://api.devnet.solana.com')
     , programId = new solana.PublicKey('68k4mTrd4uVdszH47cnodYmPot6q97rz2jXrG8FJVqEQ')
@@ -578,122 +580,30 @@ describe('exchange NFT program', function () {
   // * Allowance associated token account will be marked as used.
   // * Reward is minted using candy machine (`mint` instruction is called).
   fit('gives the reward to the caller', function () {
-    var signers = []
-      , instructions = []
-      , mintLayoutMinBalance
-      , candyMachineProgram;
-
-    return Promise.resolve()
-      .then(function () {
-        return loadCandyMachineProgram({
-          connection: connection,
-          payer: receiverKeypair
-        });
-      })
-      .then(function (program) {
-        candyMachineProgram = program;
-      })
-
-      .then(function () {
-        console.log(new Date(), 'Getting minimum balances for mint...');
-        return connection.getMinimumBalanceForRentExemption(spltoken.MintLayout.span);
-      })
-      .then(function (balance) {
-        mintLayoutMinBalance = balance;
-      })
-
-      // instructions
-      // NOTE: Create and mint one nft that the candy machine will certify.
-      .then(function () {
-        instructions.push(solana.SystemProgram.createAccount({
-          fromPubkey: receiverKeypair.publicKey,
-          newAccountPubkey: rewardMintKeypair.publicKey,
-          space: spltoken.MintLayout.span,
-          lamports: mintLayoutMinBalance,
-          programId: spltoken.TOKEN_PROGRAM_ID,
-        }));
-        instructions.push(spltoken.Token.createInitMintInstruction(
-          spltoken.TOKEN_PROGRAM_ID,
-          rewardMintKeypair.publicKey,
-          0,                         // decimals
-          receiverKeypair.publicKey, // mint authority
-          receiverKeypair.publicKey, // freeze authority
-        ));
-        instructions.push(spltoken.Token.createAssociatedTokenAccountInstruction(
-          spltoken.ASSOCIATED_TOKEN_PROGRAM_ID,
-          spltoken.TOKEN_PROGRAM_ID,
-          rewardMintKeypair.publicKey,
-          rewardAtaAddress,
-          receiverKeypair.publicKey,
-          receiverKeypair.publicKey,
-        ));
-        instructions.push(spltoken.Token.createMintToInstruction(
-          spltoken.TOKEN_PROGRAM_ID,
-          rewardMintKeypair.publicKey,
-          rewardAtaAddress,
-          receiverKeypair.publicKey,
-          [], // multisig
-          1,  // amount
-        ));
-        // instructions.push(spltoken.Token.createApproveInstruction(
-        //   spltoken.TOKEN_PROGRAM_ID,
-        //   rewardAtaAddress,
-        //   rewardCandyMachineTransferAuthorityKeypair.publicKey,
-        //   receiverKeypair.publicKey,
-        //   [], // multisig
-        //   1,  // max amount
-        // ));
-        instructions.push(new solana.TransactionInstruction({
-          programId: programId,
-          data: Buffer.from('2'),
-          keys: [
-            { isSigner: true,  isWritable: true,  pubkey: receiverKeypair.publicKey },
-            { isSigner: false, isWritable: false, pubkey: nftMintAddress },
-            { isSigner: false, isWritable: false, pubkey: nftAtaAddress },
-            { isSigner: false, isWritable: false, pubkey: nftMetadataAddress },
-            { isSigner: false, isWritable: true,  pubkey: nftAllowanceAddress },
-            { isSigner: false, isWritable: true,  pubkey: intermediaryTokenMintAddress },
-            { isSigner: false, isWritable: false, pubkey: intermediaryTokenMintAuthorityAddress },
-            { isSigner: false, isWritable: true,  pubkey: receiverIntermediaryTokenAtaAddress },
-            { isSigner: false, isWritable: false, pubkey: spltoken.TOKEN_PROGRAM_ID },
-            { isSigner: false, isWritable: false, pubkey: rewardCandyMachineProgramAddress },
-            { isSigner: false, isWritable: false, pubkey: rewardCandyMachineConfigAddress },
-            { isSigner: false, isWritable: true,  pubkey: rewardCandyMachineAddress },
-            { isSigner: false, isWritable: true,  pubkey: creatorIntermediaryTokenAtaAddress }, // wallet/treasury
-            { isSigner: false, isWritable: true,  pubkey: rewardMetadataAddress },
-            { isSigner: true,  isWritable: true,  pubkey: rewardMintKeypair.publicKey },
-            { isSigner: false, isWritable: true,  pubkey: rewardMasterEditionAddress },
-            { isSigner: false, isWritable: false, pubkey: metaplex.programs.metadata.MetadataProgram.PUBKEY },
-            { isSigner: false, isWritable: false, pubkey: solana.SystemProgram.programId },
-            { isSigner: false, isWritable: false, pubkey: solana.SYSVAR_RENT_PUBKEY },
-            { isSigner: false, isWritable: false, pubkey: solana.SYSVAR_CLOCK_PUBKEY },
-          ],
-        }));
-      })
-
-      // signers
-      .then(function () {
-        signers.push(receiverKeypair);
-        signers.push(rewardMintKeypair);
-      })
-
-      // NOTE:
-      .then(function () {
-        console.log(new Date(), 'Calling program...');
-        return connection.getRecentBlockhash();
-      })
-      .then(function (response) {
-        var trx = new solana.Transaction({
-          feePayer: receiverKeypair.publicKey,
-          recentBlockhash: response.blockhash
-        });
-        instructions.forEach(function (_) { trx.add(_); });
-        return solana.sendAndConfirmTransaction(connection, trx, signers);
-      })
+    return exchangeNft({
+      connection: connection,
+      programId: programId,
+      receiverKeypair: receiverKeypair,
+      rewardMintKeypair: rewardMintKeypair,
+      rewardAtaAddress: rewardAtaAddress,
+      nftMintAddress: nftMintAddress,
+      nftAtaAddress: nftAtaAddress,
+      nftMetadataAddress: nftMetadataAddress,
+      nftAllowanceAddress: nftAllowanceAddress,
+      intermediaryTokenMintAddress: intermediaryTokenMintAddress,
+      intermediaryTokenMintAuthorityAddress: intermediaryTokenMintAuthorityAddress,
+      receiverIntermediaryTokenAtaAddress: receiverIntermediaryTokenAtaAddress,
+      rewardCandyMachineProgramAddress: rewardCandyMachineProgramAddress,
+      rewardCandyMachineConfigAddress: rewardCandyMachineConfigAddress,
+      rewardCandyMachineAddress: rewardCandyMachineAddress,
+      creatorIntermediaryTokenAtaAddress: creatorIntermediaryTokenAtaAddress,
+      rewardMetadataAddress: rewardMetadataAddress,
+      rewardMintKeypair: rewardMintKeypair,
+      rewardMasterEditionAddress: rewardMasterEditionAddress,
+    })
       .then(function (signature) {
         console.log(new Date(), 'Success!', signature);
-        expect(signature).not.toBeUndefined();
-      })
+      });
   });
 
 });
