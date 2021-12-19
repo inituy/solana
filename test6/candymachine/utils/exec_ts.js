@@ -10,9 +10,10 @@ module.exports = function (params) {
       ];
       var cmd = cmdParts.concat(params.params).join(' ');
       var options = { cwd: params.cwd };
+      console.log(new Date(), '> Executing:', cmd);
       return new Promise(function (resolve, reject) {
         exec(cmd, options, function (error, stdout, stderr) {
-          if (!!error) reject(error);
+          if (!!error) reject({ error, stderr });
           // console.log('---ERROR---', error);
           // console.log('---STDOUT---', stdout);
           // console.log('---STDERR---', stderr);

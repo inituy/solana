@@ -175,80 +175,80 @@ pub fn mint_intermediary_token<'a>(
 
 
 pub fn purchase_reward_with_intermediary_token<'a>(
-  receiver: &AccountInfo<'a>,
-  reward_candy_machine: &AccountInfo<'a>,
-  reward_candy_machine_config: &AccountInfo<'a>,
-  reward_candy_machine_treasury: &AccountInfo<'a>,
-  reward_mint: &AccountInfo<'a>,
-  reward_master_edition: &AccountInfo<'a>,
-  token_metadata_program: &AccountInfo<'a>,
-  token_program: &AccountInfo<'a>,
-  system_program: &AccountInfo<'a>,
-  rent: &AccountInfo<'a>,
-  clock: &AccountInfo<'a>,
+  // _receiver: &AccountInfo<'a>,
+  // _reward_candy_machine: &AccountInfo<'a>,
+  // _reward_candy_machine_config: &AccountInfo<'a>,
+  // _reward_candy_machine_treasury: &AccountInfo<'a>,
+  // _reward_mint: &AccountInfo<'a>,
+  // _reward_master_edition: &AccountInfo<'a>,
+  // _token_metadata_program: &AccountInfo<'a>,
+  // _token_program: &AccountInfo<'a>,
+  // _system_program: &AccountInfo<'a>,
+  // _rent: &AccountInfo<'a>,
+  // _clock: &AccountInfo<'a>,
 ) -> Result<u8, ProgramError> {
 
-  let accounts = &[
-    AccountMeta { // payer
-      pubkey: *receiver.key,
-      is_signer: true,
-      is_writable: false,
-    },
-    AccountMeta { // candy machine config
-      pubkey: *reward_candy_machine_config.key,
-      is_signer: false,
-      is_writable: false,
-    },
-    AccountMeta { // candy machine
-      pubkey: *reward_candy_machine.key,
-      is_signer: false,
-      is_writable: false,
-    },
-    AccountMeta {
-      // TREASURY: issuer of candy machine that gets paid for NFT.
-      // NOTE: This needs to be an ATA of the intermediary token mint.
-      pubkey: *reward_candy_machine_treasury.key,
-      is_signer: false,
-      is_writable: false,
-    },
-    AccountMeta {
-      // REWARD MINT: account where the reward mint will be created by candy
-      // machine.
-      pubkey: *reward_mint.key,
-      is_signer: false,
-      is_writable: false,
-    },
-    AccountMeta {
-      // MASTER EDITION: PDA for metadata of reward nft in candy machine.
-      // NOTE: Not sure yet how to get this one. Just send PDA.
-      pubkey: *reward_master_edition.key,
-      is_signer: false,
-      is_writable: false,
-    },
-    AccountMeta { // reward nft mint authority
-      pubkey: *receiver.key,
-      is_signer: false,
-      is_writable: false,
-    },
-    AccountMeta { // reward nft update authority
-      pubkey: *receiver.key,
-      is_signer: false,
-      is_writable: false,
-    },
-    AccountMeta {
-    }
-  ];
+  // let accounts = &[
+  //   AccountMeta { // payer
+  //     pubkey: *receiver.key,
+  //     is_signer: true,
+  //     is_writable: false,
+  //   },
+  //   AccountMeta { // candy machine config
+  //     pubkey: *reward_candy_machine_config.key,
+  //     is_signer: false,
+  //     is_writable: false,
+  //   },
+  //   AccountMeta { // candy machine
+  //     pubkey: *reward_candy_machine.key,
+  //     is_signer: false,
+  //     is_writable: false,
+  //   },
+  //   AccountMeta {
+  //     // TREASURY: issuer of candy machine that gets paid for NFT.
+  //     // NOTE: This needs to be an ATA of the intermediary token mint.
+  //     pubkey: *reward_candy_machine_treasury.key,
+  //     is_signer: false,
+  //     is_writable: false,
+  //   },
+  //   AccountMeta {
+  //     // REWARD MINT: account where the reward mint will be created by candy
+  //     // machine.
+  //     pubkey: *reward_mint.key,
+  //     is_signer: false,
+  //     is_writable: false,
+  //   },
+  //   AccountMeta {
+  //     // MASTER EDITION: PDA for metadata of reward nft in candy machine.
+  //     // NOTE: Not sure yet how to get this one. Just send PDA.
+  //     pubkey: *reward_master_edition.key,
+  //     is_signer: false,
+  //     is_writable: false,
+  //   },
+  //   AccountMeta { // reward nft mint authority
+  //     pubkey: *receiver.key,
+  //     is_signer: false,
+  //     is_writable: false,
+  //   },
+  //   AccountMeta { // reward nft update authority
+  //     pubkey: *receiver.key,
+  //     is_signer: false,
+  //     is_writable: false,
+  //   },
+  //   AccountMeta {
+  //   }
+  // ];
 
-  let data = &[];
+  // let data = &[];
 
-  invoke(
-    &Instruction {
-      program_id: *reward_candy_machine.key,
-      accounts: accounts.to_vec(),
-      data: data.to_vec(),
-    },
-    &[]
-  )?;
+  // invoke(
+  //   &Instruction {
+  //     program_id: *reward_candy_machine.key,
+  //     accounts: accounts.to_vec(),
+  //     data: data.to_vec(),
+  //   },
+  //   &[]
+  // )?;
 
   // invoke_signed(
   //   &spl_token::instruction::mint_to(
