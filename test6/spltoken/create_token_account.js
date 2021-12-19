@@ -6,7 +6,7 @@ module.exports = function (params) {
     params.connection,
     new solana.PublicKey(params.token),
     new solana.PublicKey(spltoken.TOKEN_PROGRAM_ID),
-    params.tokenOwner,
+    params.payer
   );
   return Promise.resolve()
     .then(function () {

@@ -4,8 +4,6 @@ use solana_program::entrypoint::ProgramResult;
 use solana_program::account_info::AccountInfo;
 use solana_program::pubkey::Pubkey;
 
-use crate::functions::create_intermerdiary_token_mint;
-
 use crate::functions::verify_receiver_is_signer;
 use crate::functions::verify_nft_ata_belongs_to_mint;
 use crate::functions::verify_nft_ata_belongs_to_receiver;
@@ -23,34 +21,18 @@ use crate::functions::purchase_reward_with_intermediary_token;
 
 
 pub fn initialize(
-  program_id: &Pubkey,
-  accounts: &[AccountInfo],
+  _program_id: &Pubkey,
+  _accounts: &[AccountInfo],
   _instruction_data: &[u8]
 ) -> ProgramResult {
   msg!("Initialize!");
-
-  let account_iter = &mut accounts.iter();
-
-  let creator = next_account_info(account_iter)?;
-  let intermediary_token_mint = next_account_info(account_iter)?;
-  let system_program = next_account_info(account_iter)?;
-  let token_program = next_account_info(account_iter)?;
-
-  create_intermerdiary_token_mint(
-    &program_id,
-    &creator,
-    &intermediary_token_mint,
-    &system_program,
-    &token_program,
-  )?;
-
   Ok(())
 }
 
 
 
 pub fn exchange(
-  _program_id: &Pubkey,
+  program_id: &Pubkey,
   accounts: &[AccountInfo],
   _instruction_data: &[u8]
 ) -> ProgramResult {
@@ -62,9 +44,11 @@ pub fn exchange(
   let nft_mint = next_account_info(account_iter)?;
   let nft_ata = next_account_info(account_iter)?;
   let nft_metadata = next_account_info(account_iter)?;
-  // let nft_allowance = next_account_info(account_iter)?;
-
-  // let intermediary_token_ata = next_account_info(account_iter)?;
+  let _nft_allowance = next_account_info(account_iter)?;
+  let intermediary_token_mint = next_account_info(account_iter)?;
+  let intermediary_token_mint_authority = next_account_info(account_iter)?;
+  let intermediary_token_ata = next_account_info(account_iter)?;
+  let token_program = next_account_info(account_iter)?;
 
   verify_receiver_is_signer(&receiver)?; // DONE
   verify_nft_ata_belongs_to_mint(&nft_ata, &nft_mint)?; // DONE!
@@ -77,7 +61,15 @@ pub fn exchange(
   // verify_nft_allowance_account_is_not_used(&nft_allowance)?; // DOING
 
   update_nft_allowance_account_as_used()?;
-  mint_intermediary_token()?;
+
+  mint_intermediary_token(
+    &intermediary_token_mint,
+    &intermediary_token_mint_authority,
+    &intermediary_token_ata,
+    &token_program,
+    &program_id,
+  )?;
+
   purchase_reward_with_intermediary_token()?;
 
   Ok(())

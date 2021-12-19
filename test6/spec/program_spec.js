@@ -12,15 +12,20 @@ var solana = require('../solana/web3.js')
 
 fdescribe('exchange NFT program', function () {
   var connection = new solana.Connection('https://api.devnet.solana.com')
-    , programId = new solana.PublicKey('68k4mTrd4uVdszH47cnodYmPot6q97rz2jXrG8FJVqEQ');
-
-  var creatorKeypair = getCreatorKeypair()
+    , programId = new solana.PublicKey('68k4mTrd4uVdszH47cnodYmPot6q97rz2jXrG8FJVqEQ')
+    , creatorKeypair = getCreatorKeypair()
     , receiverKeypair = getReceiverKeypair()
-    , nftMintAddress = new solana.PublicKey('J53xXw6rGhWfR9ainyiZ4kJtsYmhsHNzMjNDyJgpSVwD')
+
+  // NOTE: NFT that will be exchanged for reward.
+  var nftMintAddress = new solana.PublicKey('J53xXw6rGhWfR9ainyiZ4kJtsYmhsHNzMjNDyJgpSVwD')
     , nftAtaAddress = new solana.PublicKey('BhQTw3jgf1AgU1wPmiJsNSbqcdtFkqKL4SyeFsp64819')
     , nftMetadataAddress
-    , nftAllowanceAddress
-    , intermediaryTokenMintAddress
+    , nftAllowanceAddress;
+
+  // NOTE: Intermediary token mint that is configured on the reward candy
+  // machine as payment token.
+  var intermediaryTokenMintAddress = new solana.PublicKey('4XpCHLv7ZdWmLMf2JRQeZNrnWbyqjNXXbmg7YDRRSeao')
+    , intermediaryTokenMintAuthorityAddress = new solana.PublicKey('EcsqiyVgfqQA9WkGZMC1NJr5N4V1Wkhrz8TpN4fNxvRM')
     , intermediaryTokenAtaAddress = solana.Keypair.generate().publicKey;
 
   // NOTE: NFT associated token account that was previously emptied.
@@ -36,106 +41,75 @@ fdescribe('exchange NFT program', function () {
   // NOTE: NFT metadata account that does not belong to the NFT mint.
   var wrongNftMetadataAddress = new solana.PublicKey('JA6jc4mKywBioiAYVfTQNqu52VjLQguhPdc9KyUU93uC');
 
+
+
   beforeAll(function () {
     return Promise.resolve()
+      // NOTE: Calculate different program-derived addresses that will be
+      // necessary for: metadata of the NFTs, ownership of program accounts.
       .then(function () {
+        return Promise.all([
+          solana.PublicKey.findProgramAddress(
+            [ Buffer.from('metadata'),
+              metaplex.programs.metadata.MetadataProgram.PUBKEY.toBuffer(),
+              new solana.PublicKey(balZeroNftMintAddress).toBuffer() ],
+            metaplex.programs.metadata.MetadataProgram.PUBKEY
+          ),
+          solana.PublicKey.findProgramAddress(
+            [ Buffer.from('metadata'),
+              metaplex.programs.metadata.MetadataProgram.PUBKEY.toBuffer(),
+              new solana.PublicKey(diffAuthNftMintAddress).toBuffer() ],
+            metaplex.programs.metadata.MetadataProgram.PUBKEY
+          ),
+          solana.PublicKey.findProgramAddress(
+            [ Buffer.from('metadata'),
+              metaplex.programs.metadata.MetadataProgram.PUBKEY.toBuffer(),
+              new solana.PublicKey(nftMintAddress).toBuffer() ],
+            metaplex.programs.metadata.MetadataProgram.PUBKEY
+          ),
+          solana.PublicKey.findProgramAddress(
+            [ Buffer.from('allowance'),
+              programId.toBuffer(),
+              new solana.PublicKey(nftMintAddress).toBuffer() ],
+            programId,
+          ),
+          solana.PublicKey.findProgramAddress(
+            [ Buffer.from('mintauthority'),
+              programId.toBuffer() ],
+            programId
+          )
+        ])
+      })
+      .then(function (pdas) {
+        balZeroNftMetadataAddress = pdas[0][0];
+        diffAuthNftMetadataAddress = pdas[1][0];
+        nftMetadataAddress = pdas[2][0];
+        nftAllowanceAddress = pdas[3][0];
+        intermediaryTokenMintAuthorityAddress = pdas[4][0];
         console.log(new Date(), 'Receiver wallet address', receiverKeypair.publicKey.toString());
-      })
-
-      // NOTE: Calculate NFT metadata address.
-      .then(function () {
-        return solana.PublicKey.findProgramAddress(
-          [ Buffer.from('metadata'),
-            metaplex.programs.metadata.MetadataProgram.PUBKEY.toBuffer(),
-            new solana.PublicKey(nftMintAddress).toBuffer() ],
-          metaplex.programs.metadata.MetadataProgram.PUBKEY
-        );
-      })
-      .then(function (response) {
-        nftMetadataAddress = response[0];
         console.log(new Date(), 'NFT metadata address:', nftMetadataAddress.toString());
-      })
-
-      // NOTE: Calculate NFT allowance address.
-      .then(function () {
-        return solana.PublicKey.findProgramAddress(
-          [ Buffer.from('allowance'),
-            programId.toBuffer(),
-            new solana.PublicKey(nftMintAddress).toBuffer() ],
-          programId,
-        );
-      })
-      .then(function (response) {
-        nftAllowanceAddress = response[0];
         console.log(new Date(), 'NFT allowance address:', nftAllowanceAddress.toString());
-      })
-
-      // NOTE: Calculate balance 0 NFT metadata address.
-      .then(function () {
-        return solana.PublicKey.findProgramAddress(
-          [ Buffer.from('metadata'),
-            metaplex.programs.metadata.MetadataProgram.PUBKEY.toBuffer(),
-            new solana.PublicKey(balZeroNftMintAddress).toBuffer() ],
-          metaplex.programs.metadata.MetadataProgram.PUBKEY
-        );
-      })
-      .then(function (response) {
-        balZeroNftMetadataAddress = response[0];
         console.log(new Date(), 'Balance zero NFT metadata address:', balZeroNftMetadataAddress.toString());
-      })
-
-      // NOTE: Calculate different authority NFT metadata address.
-      .then(function () {
-        return solana.PublicKey.findProgramAddress(
-          [ Buffer.from('metadata'),
-            metaplex.programs.metadata.MetadataProgram.PUBKEY.toBuffer(),
-            new solana.PublicKey(diffAuthNftMintAddress).toBuffer() ],
-          metaplex.programs.metadata.MetadataProgram.PUBKEY
-        );
-      })
-      .then(function (response) {
-        diffAuthNftMetadataAddress = response[0];
         console.log(new Date(), 'Different authority NFT metadata address:', diffAuthNftMetadataAddress.toString());
+        console.log(new Date(), 'Intermediary token mint authority:', intermediaryTokenMintAuthorityAddress.toString());
       })
 
-      // NOTE: Initialize
-      .then(function () {
-        return solana.PublicKey.findProgramAddress(
-          [ Buffer.from('imtm5'), programId.toBuffer() ],
-          programId
-        );
-      })
-      .then(function (response) {
-        intermediaryTokenMintAddress = response[0];
-        console.log(new Date(), 'Intermediary token mint address', intermediaryTokenMintAddress.toString());
-      })
-      .then(function () {
-        return connection.getRecentBlockhash();
-      })
-      .then(function (response) {
-        var keys = [
-          { isSigner: true,  isWritable: true,  pubkey: creatorKeypair.publicKey },
-          { isSigner: false, isWritable: true,  pubkey: intermediaryTokenMintAddress },
-          { isSigner: false, isWritable: false, pubkey: solana.SystemProgram.programId },
-          { isSigner: false, isWritable: false, pubkey: spltoken.TOKEN_PROGRAM_ID },
-          { isSigner: false, isWritable: false, pubkey: solana.SYSVAR_RENT_PUBKEY },
-        ];
-        var signers = [creatorKeypair];
-        var trx = new solana.Transaction({
-          feePayer: creatorKeypair.publicKey,
-          recentBlockhash: response.blockhash
-        });
-        trx.add(new solana.TransactionInstruction({
-          programId: programId,
-          keys: keys,
-          data: Buffer.from('1'),
-        }));
-        console.log(new Date(), 'Initializing...');
-        return solana.sendAndConfirmTransaction(connection, trx, signers);
-      })
-      .then(function (signature) {
-        console.log(new Date(), 'Initialized.', signature);
-      })
+      // NOTE: Create a token that will be used to purchase the reward at the
+      // reward candy machine. This token needs to have a program derived
+      // address as the mint authority in order for the program to mint a token
+      // the NFT holder can use on the reward candy machine.
+      // .then(function () {
+      //   console.log(new Date(), 'Creating intermediary token...');
+      //   return createToken({
+      //     connection: connection,
+      //     owner: creatorKeypair,
+      //     mintAuthority: intermediaryTokenMintAuthorityAddress,
+      //   });
+      // })
+      // .then(function (tokenAddress) {
+      //   intermediaryTokenMintAddress = tokenAddress;
+      //   console.log(new Date(), 'Intermediary token mint:', tokenAddress.toString());
+      // })
       .catch(console.log);
   });
 
@@ -194,7 +168,7 @@ fdescribe('exchange NFT program', function () {
         return createTokenAccount({
           connection: connection,
           token: tokenAddress,
-          tokenOwner: receiverKeypair,
+          payer: receiverKeypair,
           tokenAccountOwner: receiverKeypair.publicKey,
         });
       })
@@ -256,7 +230,7 @@ fdescribe('exchange NFT program', function () {
         return createTokenAccount({
           connection: connection,
           token: nftMintAddress,
-          tokenOwner: someoneElsesKeypair,
+          payer: someoneElsesKeypair,
           tokenAccountOwner: someoneElsesKeypair.publicKey,
         });
       })
@@ -422,13 +396,19 @@ fdescribe('exchange NFT program', function () {
       })
   });
 
-  /* // NOTE: Caller can pass an associated token account made for another
+
+
+  // NOTE: Caller can pass an associated token account made for another
   // token mint. In that case, we will not accept the associated token account.
-  xit('fails if reward ata not related to reward mint');
+  it('fails if reward ata not related to reward mint');
+
+
 
   // NOTE: Caller can pass an associated token account that already exists.
   // In that case, we will not accept the associated token account.
-  xit('fails if reward ata has lamports'); */
+  it('fails if reward ata has lamports');
+
+
 
   // NOTE: Caller can pass an allowance account with an address that does not
   // match the required derived address: // ['reward_allowance', pid, nft]
@@ -470,36 +450,42 @@ fdescribe('exchange NFT program', function () {
       })
   });
 
+
+
   // NOTE: Caller can pass the allowance account twice, which means they
   // already got their reward. In that case, we will not accept the allowance
   // account.
   it('fails if allowance ata was already used');
+
+
 
   // NOTE: Caller can pass an intermediary token associated token account that
   // doesnt belong to the intermediary token mint. In that case, we will not
   // accept the intermediary token associated account.
   it('fails if intermediary token ata is for wrong mint');
 
+
+
   // NOTE: If caller passes all the right values:
   // * Allowance associated token account will be marked as used.
   // * Reward is minted using candy machine (`mint` instruction is called).
   fit('gives the reward to the caller', function () {
     return Promise.resolve()
-      // .then(function () {
-      //   return connection.getMinimumBalanceForRentExemption(10, "confirmed");
-      // })
-      // .then(function (minBalance) {
-      //   return createAccount({
-      //     connection: connection,
-      //     payer: receiverKeypair,
-      //     address: nftAllowanceAddress,
-      //     space: 10,
-      //     lamports: minBalance,
-      //     programId: programId,
-      //   });
-      // })
-      .then(function (response) {
-        console.log(new Date(), 'Getting blockhash...');
+      .then(function () {
+        console.log(new Date(), 'Creating intermediary token associated token account...');
+        return createTokenAccount({
+          connection: connection,
+          token: intermediaryTokenMintAddress,
+          payer: receiverKeypair,
+          tokenAccountOwner: receiverKeypair.publicKey,
+        });
+      })
+      .then(function (tokenAccountAddress) {
+        console.log(new Date(), 'Intermediary token associated account:', tokenAccountAddress.toString());
+        intermediaryTokenAtaAddress = tokenAccountAddress;
+      })
+      .then(function () {
+        console.log(new Date(), 'Calling program...');
         return connection.getRecentBlockhash();
       })
       .then(function (response) {
@@ -509,7 +495,10 @@ fdescribe('exchange NFT program', function () {
           { isSigner: false, isWritable: false, pubkey: nftAtaAddress },
           { isSigner: false, isWritable: false, pubkey: nftMetadataAddress },
           { isSigner: false, isWritable: true,  pubkey: nftAllowanceAddress },
-          { isSigner: false, isWritable: false, pubkey: intermediaryTokenAtaAddress },
+          { isSigner: false, isWritable: true,  pubkey: intermediaryTokenMintAddress },
+          { isSigner: false, isWritable: false, pubkey: intermediaryTokenMintAuthorityAddress },
+          { isSigner: false, isWritable: true,  pubkey: intermediaryTokenAtaAddress },
+          { isSigner: false, isWritable: false, pubkey: spltoken.TOKEN_PROGRAM_ID },
         ];
         var signers = [receiverKeypair];
         var trx = new solana.Transaction({

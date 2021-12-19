@@ -1,47 +1,11 @@
-// use crate::allowance;
-use solana_program::program::invoke_signed as invoke_signed;
 use solana_program::msg;
+use solana_program::program::invoke_signed;
 use solana_program::account_info::AccountInfo;
 use solana_program::pubkey::Pubkey;
 use solana_program::program_error::ProgramError;
 use solana_program::program_pack::Pack;
-use solana_program::system_instruction;
 use spl_token::state::Account as SplTokenAccount;
-//use spl_token::id as SPL_TOKEN_PROGRAM_ID;
 use spl_token_metadata::state::Metadata;
-
-
-pub fn create_intermerdiary_token_mint<'a>(
-  program_id: &Pubkey,
-  creator: &AccountInfo<'a>,
-  intermediary_token_mint: &AccountInfo<'a>,
-  system_program: &AccountInfo<'a>,
-  _token_program: &AccountInfo<'a>,
-) -> Result<u8, ProgramError> {
-  let key: &[u8] = b"imtm5";
-  let (pda, bump) = Pubkey::find_program_address(&[key, program_id.as_ref()], &program_id);
-  let signer: &[&[&[u8]]] = &[&[&key[..], program_id.as_ref(), &[bump]]];
-
-  msg!("{:?}, {:?}", intermediary_token_mint.key, pda);
-
-  invoke_signed(
-    &system_instruction::create_account(
-      creator.key,
-      &pda,
-      0,
-      0,
-      program_id,
-    ),
-    &[
-      creator.clone(),
-      intermediary_token_mint.clone(),
-      system_program.clone(),
-    ],
-    signer
-  )?;
-
-  Ok(1)
-}
 
 
 
@@ -173,17 +137,35 @@ pub fn update_nft_allowance_account_as_used(
 
 
 
-pub fn mint_intermediary_token(
-  // _intermediary_token_mint: &AccountInfo,
-  // _intermediary_token_ata: &AccountInfo,
+pub fn mint_intermediary_token<'a>(
+  intermediary_token_mint: &AccountInfo<'a>,
+  intermediary_token_mint_authority: &AccountInfo<'a>,
+  intermediary_token_ata: &AccountInfo<'a>,
+  token_program: &AccountInfo<'a>,
+  program_id: &Pubkey,
 ) -> Result<u8, ProgramError> {
-  // let ix = spl_token::instruction::mint_to(
-  //   SPL_TOKEN_PROGRAM_ID,
-  //   intermediary_token_mint,
-  //   intermediary_token_ata,
-  //   &[],
-  //   1
-  // );
+  let key: &[u8] = b"mintauthority";
+  let (mint_authority, bump) = Pubkey::find_program_address(&[key, program_id.as_ref()], &program_id);
+  let signer: &[&[&[u8]]] = &[&[&key[..], program_id.as_ref(), &[bump]]];
+
+  invoke_signed(
+    &spl_token::instruction::mint_to(
+      &spl_token::id(),
+      intermediary_token_mint.key,
+      intermediary_token_ata.key,
+      &mint_authority,
+      &[],
+      1,
+    )?,
+    &[
+      intermediary_token_mint.clone(),
+      intermediary_token_ata.clone(),
+      intermediary_token_mint_authority.clone(),
+      token_program.clone(),
+    ],
+    signer
+  )?;
+
   Ok(1)
 }
 
