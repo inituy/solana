@@ -12,6 +12,15 @@ use solana_program::instruction::AccountMeta;
 
 
 
+fn pubkey_from_str(string: &str) -> Result<Pubkey, ProgramError> {
+  match bs58::decode(string).into_vec() {
+    Ok(vec) => { return Ok(Pubkey::new(&vec[..])); }
+    _       => { return Err(ProgramError::Custom(1)); }
+  }
+}
+
+
+
 pub fn verify_nft_ata_belongs_to_mint(
   nft_ata: &AccountInfo,
   nft_mint: &AccountInfo,
@@ -26,19 +35,27 @@ pub fn verify_nft_ata_belongs_to_mint(
 
 
 
-pub fn verify_nft_metadata_update_authority_matches(
+pub fn verify_nft_metadata_creator(
   nft_metadata: &AccountInfo,
 ) -> Result<u8, ProgramError> {
+  let mut valid_creator = false;
   let metadata = Metadata::from_account_info(&nft_metadata)?;
-  match bs58::decode("HW6oto3fnZuWfFcLaMBRkA4UYChQ8D57LTcHLKS3GmbC").into_vec() {
-    Ok(reward_update_authority_vec) => {
-      let reward_update_authority = Pubkey::new(&reward_update_authority_vec[..]);
-      if metadata.update_authority != reward_update_authority {
-        msg!("NFT metadata does not have the correct update authority");
-        return Err(ProgramError::Custom(1));
+  let creators = metadata.data.creators.ok_or(ProgramError::Custom(1))?;
+  let accepted_creators: &[Pubkey] = &[
+    pubkey_from_str("HW6oto3fnZuWfFcLaMBRkA4UYChQ8D57LTcHLKS3GmbC")?
+  ];
+  for creator in creators {
+    if creator.verified {
+      for accepted_creator in accepted_creators {
+        if creator.address == *accepted_creator {
+          valid_creator = true;
+        }
       }
     }
-    _ => {}
+  }
+  if !valid_creator {
+    msg!("NFT metadata does not have the correct creator");
+    return Err(ProgramError::Custom(1));
   }
   Ok(1)
 }

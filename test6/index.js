@@ -6,16 +6,23 @@ var connection = new solana.Connection('https://api.devnet.solana.com');
 document.querySelector('button').addEventListener('click', function () {
   Promise.resolve()
     .then(function () {
+      var addrs = [
+        '68k4mTrd4uVdszH47cnodYmPot6q97rz2jXrG8FJVqEQ',
+        '8Mwn68bxvFSgvqdrmDY6Uffm6FuDWncphBnRywz1yChv',
+        'C4mK7STgAaNRpEcT4Xmbgbsyz1siyrenmiCciSh1FoyK',
+        'DNy7Mb5z2tqGGpjNmLPLgPpjSLNzvzNZMcNscEY2zqLw',
+        '6m4YHztTAnN2swbX1Si7CkjWsnyUUSf7t6Jwo3FNs5da',
+        'G4HGGAAi7fNqPWvoiXKGvzrCxahLq9YZwyerc3tPvL9T',
+      ];
       return exchangeNft({
-        connection: connection,
         receiverAddress: phantom.publicKey,
-        programId: new solana.PublicKey('68k4mTrd4uVdszH47cnodYmPot6q97rz2jXrG8FJVqEQ'),
-        nftMintAddress: new solana.PublicKey('J53xXw6rGhWfR9ainyiZ4kJtsYmhsHNzMjNDyJgpSVwD'),
-        intermediaryTokenMintAddress: new solana.PublicKey('68k4mTrd4uVdszH47cnodYmPot6q97rz2jXrG8FJVqEQ'),
-        creatorIntermediaryTokenAtaAddress: new solana.PublicKey('68k4mTrd4uVdszH47cnodYmPot6q97rz2jXrG8FJVqEQ'),
-        rewardCandyMachineProgramAddress: new solana.PublicKey('68k4mTrd4uVdszH47cnodYmPot6q97rz2jXrG8FJVqEQ'),
-        rewardCandyMachineConfigAddress: new solana.PublicKey('68k4mTrd4uVdszH47cnodYmPot6q97rz2jXrG8FJVqEQ'),
-        rewardCandyMachineAddress: new solana.PublicKey('68k4mTrd4uVdszH47cnodYmPot6q97rz2jXrG8FJVqEQ'),
+        connection: connection,
+        programId: new solana.PublicKey(addrs[0]),
+        nftMintAddress: new solana.PublicKey(addrs[1]),
+        intermediaryTokenMintAddress: new solana.PublicKey(addrs[2]),
+        creatorIntermediaryTokenAtaAddress: new solana.PublicKey(addrs[3]),
+        rewardCandyMachineConfigAddress: new solana.PublicKey(addrs[4]),
+        rewardCandyMachineAddress: new solana.PublicKey(addrs[5]),
       });
     })
     .then(function (trx) {

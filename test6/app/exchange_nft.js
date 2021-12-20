@@ -23,11 +23,11 @@ module.exports = function (input) {
     , nftMintAddress = input.nftMintAddress
     , intermediaryTokenMintAddress = input.intermediaryTokenMintAddress
     , creatorIntermediaryTokenAtaAddress = input.creatorIntermediaryTokenAtaAddress
-    , rewardCandyMachineProgramAddress = input.rewardCandyMachineProgramAddress
     , rewardCandyMachineConfigAddress = input.rewardCandyMachineConfigAddress
     , rewardCandyMachineAddress = input.rewardCandyMachineAddress
 
-  var rewardMintKeypair = solana.Keypair.generate();
+  var rewardMintKeypair = solana.Keypair.generate()
+    , candyMachineProgramAddress = new solana.PublicKey('cndyAnrLdpjq1Ssp1z8xxDsB8dxe7u4HL5Nxi2K5WXZ')
 
   return Promise.resolve()
     .then(function () {
@@ -162,7 +162,7 @@ module.exports = function (input) {
           { isSigner: false, isWritable: false, pubkey: intermediaryTokenMintAuthorityAddress },
           { isSigner: false, isWritable: true,  pubkey: receiverIntermediaryTokenAtaAddress },
           { isSigner: false, isWritable: false, pubkey: spltoken.TOKEN_PROGRAM_ID },
-          { isSigner: false, isWritable: false, pubkey: rewardCandyMachineProgramAddress },
+          { isSigner: false, isWritable: false, pubkey: candyMachineProgramAddress },
           { isSigner: false, isWritable: false, pubkey: rewardCandyMachineConfigAddress },
           { isSigner: false, isWritable: true,  pubkey: rewardCandyMachineAddress },
           { isSigner: false, isWritable: true,  pubkey: creatorIntermediaryTokenAtaAddress }, // wallet/treasury

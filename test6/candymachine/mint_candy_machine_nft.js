@@ -4,8 +4,8 @@ var execTs = require('./utils/exec_ts');
 
 module.exports = function (params) {
   var secretKeyPath = path.join(__dirname, `id${Math.ceil(Math.random()*1000000)}.json`);
-  var secretKey = `[${params.owner.secretKey.toString()}]`;
-  var configPublicKey;
+  var secretKey = `[${params.receiver.secretKey.toString()}]`;
+  var signature;
   return Promise.resolve()
     .then(function () { fs.writeFileSync(secretKeyPath, secretKey); })
     .then(function () {
@@ -17,17 +17,25 @@ module.exports = function (params) {
           '--keypair', secretKeyPath
         ]
       })
-        .catch(function () {
-          console.log(new Date(), 'Couldnt mint, all NFTs minted already? Try getting rid of .cache');
+        .then(function (stdout) {
+          signature = stdout.match(/mint_one_token finished (.*)/);
+          signature = signature[1].trim();
+        })
+        .catch(function (error) {
+          console.log(new Date(), 'Could not mint:', error);
         });
     })
     .then(function () {
+      console.log(new Date(), 'Deleting temporary secret key:', secretKeyPath);
       try { fs.unlinkSync(secretKeyPath); } catch (e) {}
     })
     .then(function () {
-      var cachePath = path.join(params.rootPath, '.cache', `${params.environment}-temp.json`);
-      var cacheContents = fs.readFileSync(cachePath).toString();
-      var cacheJson = JSON.parse(cacheContents);
-      return cacheJson;
-    });
+      console.log(new Date(), 'Fetching transaction...', signature);
+      return params.connection.getTransaction(signature);
+    })
+    .then(function (trx) {
+      var address = trx.transaction.message.accountKeys[1];
+      // console.log(new Date(), 'Got mint address:', address.toString());
+      return address;
+    })
 };

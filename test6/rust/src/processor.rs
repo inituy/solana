@@ -9,7 +9,7 @@ use crate::functions::verify_nft_ata_belongs_to_mint;
 use crate::functions::verify_nft_ata_belongs_to_receiver;
 use crate::functions::verify_nft_ata_balance_is_not_zero;
 use crate::functions::verify_nft_metadata_belongs_to_mint;
-use crate::functions::verify_nft_metadata_update_authority_matches;
+use crate::functions::verify_nft_metadata_creator;
 // use crate::functions::verify_nft_allowance_account_is_owned;
 // use crate::functions::verify_nft_allowance_account_is_valid;
 // use crate::functions::verify_nft_allowance_account_is_not_used;
@@ -67,7 +67,7 @@ pub fn exchange(
   verify_nft_ata_belongs_to_receiver(&nft_ata, &receiver)?; // DONE
   verify_nft_ata_balance_is_not_zero(&nft_ata)?; // DONE
   verify_nft_metadata_belongs_to_mint(&nft_metadata, &nft_mint)?; // DONE!
-  verify_nft_metadata_update_authority_matches(&nft_metadata)?; // DONE
+  verify_nft_metadata_creator(&nft_metadata)?; // DONE
   // verify_nft_allowance_account_is_owned(&program_id, &nft_allowance)?;
   // verify_nft_allowance_account_is_valid(&program_id, &nft_mint, &nft_allowance)?; // DONE
   // verify_nft_allowance_account_is_not_used(&nft_allowance)?; // DOING

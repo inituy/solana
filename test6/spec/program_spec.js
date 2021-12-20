@@ -9,8 +9,11 @@ var solana = require('../solana/web3.js')
 
 var getCreatorKeypair = require('./support/get_creator_keypair')
   , getReceiverKeypair = require('./support/get_receiver_keypair')
+  , forgetNftCandyMachine = require('./support/forget_nft_candy_machine')
+  , createNftCandyMachine = require('./support/create_nft_candy_machine')
   , forgetRewardCandyMachine = require('./support/forget_reward_candy_machine')
   , createRewardCandyMachine = require('./support/create_reward_candy_machine')
+  , mintNftToReceiver = require('./support/mint_nft_to_receiver');
 
 var exchangeNft = require('../app/exchange_nft.js');
 
@@ -21,10 +24,7 @@ describe('exchange NFT program', function () {
     , receiverKeypair = getReceiverKeypair()
 
   // NOTE: NFT that will be exchanged for reward.
-  var nftMintAddress = new solana.PublicKey('J53xXw6rGhWfR9ainyiZ4kJtsYmhsHNzMjNDyJgpSVwD')
-    , nftAtaAddress = new solana.PublicKey('BhQTw3jgf1AgU1wPmiJsNSbqcdtFkqKL4SyeFsp64819')
-    , nftMetadataAddress
-    , nftAllowanceAddress;
+  var nftMintAddress;
 
   // NOTE: Intermediary token mint that is configured on the reward candy
   // machine as payment token.
@@ -46,14 +46,13 @@ describe('exchange NFT program', function () {
 
   // NOTE: Candy machine to issues the reward NFTs program and config
   // addresses.
-  var rewardCandyMachineProgramAddress = new solana.PublicKey('cndyAnrLdpjq1Ssp1z8xxDsB8dxe7u4HL5Nxi2K5WXZ')
-    , rewardCandyMachineAddress
-    , rewardCandyMachineConfigAddress
-    , rewardCandyMachineTransferAuthorityKeypair = solana.Keypair.generate()
-    , rewardMintKeypair = solana.Keypair.generate()
-    , rewardAtaAddress
-    , rewardMetadataAddress
-    , rewardMasterEditionAddress;
+  var nftCandyMachineAddress
+    , nftCandyMachineConfigAddress;
+
+  // NOTE: Candy machine to issues the reward NFTs program and config
+  // addresses.
+  var rewardCandyMachineAddress
+    , rewardCandyMachineConfigAddress;
 
   // NOTE: Creator associated token account will be used as treasury. Receiver
   // associated token account will be used as a step in the middle of the
@@ -107,6 +106,29 @@ describe('exchange NFT program', function () {
 
       // NOTE: NFT candy machine.
       .then(function () {
+        console.log(new Date(), 'Forgetting NFT candy machine...');
+        return forgetNftCandyMachine();
+      })
+      .then(function () {
+        console.log(new Date(), 'Creating NFT candy machine...');
+        return createNftCandyMachine({ creatorKeypair: creatorKeypair });
+      })
+      .then(function (candyMachine) {
+        nftCandyMachineAddress = new solana.PublicKey(candyMachine.candyMachineAddress);
+        nftCandyMachineConfigAddress = new solana.PublicKey(candyMachine.program.config);
+        console.log(new Date(), 'NFT candy machine:', nftCandyMachineAddress.toString());
+        console.log(new Date(), 'NFT candy machine config:', nftCandyMachineConfigAddress.toString());
+      })
+      .then(function() {
+        console.log(new Date(), 'Giving NFT to receiver...');
+        return mintNftToReceiver({
+          connection: connection,
+          receiverKeypair: receiverKeypair
+        });
+      })
+      .then(function (nftAddress) {
+        nftMintAddress = nftAddress;
+        console.log(new Date(), 'Gave receiver the NFT:', nftMintAddress.toString());
       })
 
       // NOTE: Reward candy machine.
@@ -493,12 +515,11 @@ describe('exchange NFT program', function () {
       .then(function () {
         return exchangeNft({
           connection: new solana.Connection('https://api.devnet.solana.com'),
-          receiverAddress: receiverKeypair.publicKey,
           programId: new solana.PublicKey('68k4mTrd4uVdszH47cnodYmPot6q97rz2jXrG8FJVqEQ'),
-          nftMintAddress: new solana.PublicKey('J53xXw6rGhWfR9ainyiZ4kJtsYmhsHNzMjNDyJgpSVwD'),
+          receiverAddress: receiverKeypair.publicKey,
+          nftMintAddress: nftMintAddress,
           intermediaryTokenMintAddress: intermediaryTokenMintAddress,
           creatorIntermediaryTokenAtaAddress: creatorIntermediaryTokenAtaAddress,
-          rewardCandyMachineProgramAddress: rewardCandyMachineProgramAddress,
           rewardCandyMachineConfigAddress: rewardCandyMachineConfigAddress,
           rewardCandyMachineAddress: rewardCandyMachineAddress,
         })

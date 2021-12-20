@@ -1,0 +1,19 @@
+{
+  "name": "Pokemon 1",
+  "symbol": "",
+  "image": "1.png",
+  "properties": {
+    "files": [
+      {
+        "uri": "1.png",
+        "type": "image/png"
+      }
+    ],
+    "creators": [
+      {
+        "address": "HW6oto3fnZuWfFcLaMBRkA4UYChQ8D57LTcHLKS3GmbC",
+        "share": 100
+      }
+    ]
+  }
+}
