@@ -5,10 +5,44 @@ use solana_program::account_info::AccountInfo;
 use solana_program::pubkey::Pubkey;
 use solana_program::program_error::ProgramError;
 use solana_program::program_pack::Pack;
+use solana_program::program_pack::Sealed;
 use spl_token::state::Account as SplTokenAccount;
 use spl_token_metadata::state::Metadata;
 use solana_program::instruction::Instruction;
 use solana_program::instruction::AccountMeta;
+
+
+
+#[derive(Debug)]
+struct NftAllowanceAccount {
+  used: u8,
+  nft_mint: Pubkey,
+}
+
+
+
+impl Sealed for NftAllowanceAccount {}
+
+
+
+impl Pack for NftAllowanceAccount {
+  const LEN: usize = 33;
+
+  fn unpack_from_slice(src: &[u8]) -> Result<Self, ProgramError> {
+    let account = NftAllowanceAccount {
+      used: src[0],
+      nft_mint: Pubkey::new(&src[1..Self::LEN])
+    };
+    msg!("ALLOWANCE {:?}", account);
+    Ok(account)
+  }
+
+  fn pack_into_slice(&self, dst: &mut [u8]) {
+    let NftAllowanceAccount { used, nft_mint } = self;
+    dst[0] = *used as u8;
+    dst[1..Self::LEN].copy_from_slice(nft_mint.as_ref());
+  }
+}
 
 
 
@@ -17,6 +51,15 @@ fn pubkey_from_str(string: &str) -> Result<Pubkey, ProgramError> {
     Ok(vec) => { return Ok(Pubkey::new(&vec[..])); }
     _       => { return Err(ProgramError::Custom(1)); }
   }
+}
+
+
+
+pub fn verify_receiver_is_signer(
+  receiver: &AccountInfo,
+) -> Result<u8, ProgramError> {
+  if !receiver.is_signer { return Err(ProgramError::Custom(1)); }
+  Ok(1)
 }
 
 
@@ -103,7 +146,7 @@ pub fn verify_nft_ata_balance_is_not_zero(
 
 
 
-pub fn verify_nft_allowance_account_is_valid(
+pub fn verify_nft_allowance_account_address(
   program_id: &Pubkey,
   nft_mint: &AccountInfo,
   nft_allowance: &AccountInfo,
@@ -118,7 +161,7 @@ pub fn verify_nft_allowance_account_is_valid(
   );
   let expected_address = pda.0;
   if *nft_allowance.key != expected_address {
-    msg!("NFT allowance account is not valid");
+    msg!("NFT allowance account address is not valid");
     return Err(ProgramError::Custom(1));
   }
   Ok(1)
@@ -245,8 +288,6 @@ pub fn purchase_reward_with_intermediary_token<'a>(
 
   let data = &[ 211, 57, 6, 167, 15, 219, 35, 251 ];
 
-  msg!("DATA: {:?}", data);
-
   invoke(
     &Instruction {
       program_id: *candy_machine_program.key,
@@ -256,14 +297,5 @@ pub fn purchase_reward_with_intermediary_token<'a>(
     &accounts
   )?;
 
-  Ok(1)
-}
-
-
-
-pub fn verify_receiver_is_signer(
-  receiver: &AccountInfo,
-) -> Result<u8, ProgramError> {
-  if !receiver.is_signer { return Err(ProgramError::Custom(1)); }
   Ok(1)
 }

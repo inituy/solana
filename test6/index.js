@@ -6,6 +6,7 @@ var connection = new solana.Connection('https://api.devnet.solana.com');
 document.querySelector('button').addEventListener('click', function () {
   Promise.resolve()
     .then(function () {
+      // TODO: Move to .env
       var addrs = [
         '68k4mTrd4uVdszH47cnodYmPot6q97rz2jXrG8FJVqEQ',
         '8Mwn68bxvFSgvqdrmDY6Uffm6FuDWncphBnRywz1yChv',

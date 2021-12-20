@@ -31,7 +31,7 @@ module.exports = function (params) {
     })
     .then(function () {
       console.log(new Date(), 'Fetching transaction...', signature);
-      return params.connection.getTransaction(signature);
+      return params.connection.getTransaction(signature, 'confirmed');
     })
     .then(function (trx) {
       var address = trx.transaction.message.accountKeys[1];

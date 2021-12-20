@@ -13,7 +13,8 @@ var getCreatorKeypair = require('./support/get_creator_keypair')
   , createNftCandyMachine = require('./support/create_nft_candy_machine')
   , forgetRewardCandyMachine = require('./support/forget_reward_candy_machine')
   , createRewardCandyMachine = require('./support/create_reward_candy_machine')
-  , mintNftToReceiver = require('./support/mint_nft_to_receiver');
+  , mintNftToReceiver = require('./support/mint_nft_to_receiver')
+  , signAllNfts = require('./support/sign_all_nfts');
 
 var exchangeNft = require('../app/exchange_nft.js');
 
@@ -129,6 +130,9 @@ describe('exchange NFT program', function () {
       .then(function (nftAddress) {
         nftMintAddress = nftAddress;
         console.log(new Date(), 'Gave receiver the NFT:', nftMintAddress.toString());
+      })
+      .then(function () {
+        return signAllNfts();
       })
 
       // NOTE: Reward candy machine.
