@@ -3,19 +3,22 @@ use solana_program::account_info::next_account_info;
 use solana_program::entrypoint::ProgramResult;
 use solana_program::account_info::AccountInfo;
 use solana_program::pubkey::Pubkey;
+use solana_program::rent::Rent;
+use solana_program::sysvar::Sysvar;
 
 use crate::functions::verify_receiver_is_signer;
 use crate::functions::verify_nft_ata_belongs_to_mint;
 use crate::functions::verify_nft_ata_belongs_to_receiver;
 use crate::functions::verify_nft_ata_balance_is_not_zero;
 use crate::functions::verify_nft_metadata_belongs_to_mint;
-// use crate::functions::verify_nft_metadata_creator;
-// use crate::functions::verify_nft_allowance_account_is_owned;
-// use crate::functions::verify_nft_allowance_account_is_valid;
-// use crate::functions::verify_nft_allowance_account_is_not_used;
+use crate::functions::verify_nft_metadata_creator;
+use crate::functions::verify_nft_allowance_account_is_owned;
+use crate::functions::verify_nft_allowance_account_address;
+use crate::functions::verify_nft_allowance_account_is_not_used;
 
-use crate::functions::mint_intermediary_token;
+use crate::functions::create_nft_allowance_account_if_nonexistent;
 use crate::functions::update_nft_allowance_account_as_used;
+use crate::functions::mint_intermediary_token;
 use crate::functions::purchase_reward_with_intermediary_token;
 
 
@@ -44,7 +47,7 @@ pub fn exchange(
   let nft_mint = next_account_info(account_iter)?;
   let nft_ata = next_account_info(account_iter)?;
   let nft_metadata = next_account_info(account_iter)?;
-  let _nft_allowance = next_account_info(account_iter)?;
+  let nft_allowance = next_account_info(account_iter)?;
   let intermediary_token_mint = next_account_info(account_iter)?;
   let intermediary_token_mint_authority = next_account_info(account_iter)?;
   let intermediary_token_ata = next_account_info(account_iter)?;
@@ -62,6 +65,15 @@ pub fn exchange(
   let rent = next_account_info(account_iter)?;
   let clock = next_account_info(account_iter)?;
 
+  create_nft_allowance_account_if_nonexistent(
+    &program_id,
+    &receiver,
+    &nft_allowance,
+    &nft_mint,
+    &system_program,
+    Rent::from_account_info(&rent)?,
+  )?;
+
   verify_receiver_is_signer(&receiver)?;
 
   verify_nft_ata_belongs_to_mint(&nft_ata, &nft_mint)?;
@@ -69,13 +81,16 @@ pub fn exchange(
   verify_nft_ata_balance_is_not_zero(&nft_ata)?;
 
   verify_nft_metadata_belongs_to_mint(&nft_metadata, &nft_mint)?;
-  // verify_nft_metadata_creator(&nft_metadata)?;
+  verify_nft_metadata_creator(&nft_metadata)?;
 
-  // verify_nft_allowance_account_address(&program_id, &nft_mint, &nft_allowance)?; // DONE
-  // verify_nft_allowance_account_is_owned(&program_id, &nft_allowance)?;
-  // verify_nft_allowance_account_is_not_used(&nft_allowance)?; // DOING
+  verify_nft_allowance_account_address(&program_id, &nft_mint, &nft_allowance)?; // DONE
+  verify_nft_allowance_account_is_owned(&program_id, &nft_allowance)?; // DONE
+  verify_nft_allowance_account_is_not_used(&nft_allowance)?; // DONE
 
-  update_nft_allowance_account_as_used()?;
+  update_nft_allowance_account_as_used(
+    &nft_allowance,
+    &nft_mint,
+  )?;
 
   mint_intermediary_token(
     &intermediary_token_mint,

@@ -85,21 +85,25 @@ module.exports = function (input) {
       intermediaryTokenMintAuthorityAddress = pdas[7][0];
     })
 
-      .then(function () {
-        console.log(new Date(), intermediaryTokenMintAddress.toString(), '+ Intermediary token mint');
-        console.log(new Date(), intermediaryTokenMintAuthorityAddress.toString(), '+ Intermediary token mint authority');
-        console.log(new Date(), creatorIntermediaryTokenAtaAddress.toString(), '+ Creater intermediary associated token account address');
-        console.log(new Date(), receiverAddress.toString(), '+ Receiver address');
-        console.log(new Date(), receiverIntermediaryTokenAtaAddress.toString(), '+ Receiver intermediary associated token account address');
-        console.log(new Date(), nftMintAddress.toString(), '+ NFT mint address');
-        console.log(new Date(), nftAtaAddress.toString(), '+ NFT associated token account address');
-        console.log(new Date(), nftMetadataAddress.toString(), '+ NFT metadata address');
-        console.log(new Date(), nftAllowanceAddress.toString(), '+ NFT allowance address');
-        console.log(new Date(), rewardMintKeypair.publicKey.toString(), '+ Reward mint address');
-        console.log(new Date(), rewardAtaAddress.toString(), '+ Reward associated token address');
-        console.log(new Date(), rewardMetadataAddress.toString(), '+ Reward metadata address');
-        console.log(new Date(), rewardMasterEditionAddress.toString(), '+ Reward master edition address');
-      })
+
+
+    .then(function () {
+      console.log(new Date(), intermediaryTokenMintAddress.toString(), '+ Intermediary token mint');
+      console.log(new Date(), intermediaryTokenMintAuthorityAddress.toString(), '+ Intermediary token mint authority');
+      console.log(new Date(), creatorIntermediaryTokenAtaAddress.toString(), '+ Creater intermediary associated token account address');
+      console.log(new Date(), receiverAddress.toString(), '+ Receiver address');
+      console.log(new Date(), receiverIntermediaryTokenAtaAddress.toString(), '+ Receiver intermediary associated token account address');
+      console.log(new Date(), nftMintAddress.toString(), '+ NFT mint address');
+      console.log(new Date(), nftAtaAddress.toString(), '+ NFT associated token account address');
+      console.log(new Date(), nftMetadataAddress.toString(), '+ NFT metadata address');
+      console.log(new Date(), nftAllowanceAddress.toString(), '+ NFT allowance address');
+      console.log(new Date(), rewardMintKeypair.publicKey.toString(), '+ Reward mint address');
+      console.log(new Date(), rewardAtaAddress.toString(), '+ Reward associated token address');
+      console.log(new Date(), rewardMetadataAddress.toString(), '+ Reward metadata address');
+      console.log(new Date(), rewardMasterEditionAddress.toString(), '+ Reward master edition address');
+    })
+
+
 
     .then(function () {
       console.log(new Date(), 'Getting minimum balances for mint...');
@@ -111,44 +115,43 @@ module.exports = function (input) {
 
     // NOTE: Create and mint one nft that the candy machine will certify.
     .then(function () {
-      instructions.push(spltoken.Token.createAssociatedTokenAccountInstruction(
-        spltoken.ASSOCIATED_TOKEN_PROGRAM_ID,
-        spltoken.TOKEN_PROGRAM_ID,
-        intermediaryTokenMintAddress,
-        receiverIntermediaryTokenAtaAddress,
-        receiverAddress,
-        receiverAddress,
-      ));
-      instructions.push(solana.SystemProgram.createAccount({
-        fromPubkey: receiverAddress,
-        newAccountPubkey: rewardMintKeypair.publicKey,
-        space: spltoken.MintLayout.span,
-        lamports: mintLayoutMinBalance,
-        programId: spltoken.TOKEN_PROGRAM_ID,
-      }));
-      instructions.push(spltoken.Token.createInitMintInstruction(
-        spltoken.TOKEN_PROGRAM_ID,
-        rewardMintKeypair.publicKey,
-        0,                         // decimals
-        receiverAddress, // mint authority
-        receiverAddress, // freeze authority
-      ));
-      instructions.push(spltoken.Token.createAssociatedTokenAccountInstruction(
-        spltoken.ASSOCIATED_TOKEN_PROGRAM_ID,
-        spltoken.TOKEN_PROGRAM_ID,
-        rewardMintKeypair.publicKey,
-        rewardAtaAddress,
-        receiverAddress,
-        receiverAddress,
-      ));
-      instructions.push(spltoken.Token.createMintToInstruction(
-        spltoken.TOKEN_PROGRAM_ID,
-        rewardMintKeypair.publicKey,
-        rewardAtaAddress,
-        receiverAddress,
-        [], // multisig
-        1,  // amount
-      ));
+      // instructions.push(spltoken.Token.createAssociatedTokenAccountInstruction(
+      //   spltoken.ASSOCIATED_TOKEN_PROGRAM_ID,
+      //   spltoken.TOKEN_PROGRAM_ID,
+      //   intermediaryTokenMintAddress,
+      //   receiverIntermediaryTokenAtaAddress,
+      //   receiverAddress,
+      //   receiverAddress,
+      // ));
+      // instructions.push(solana.SystemProgram.createAccount({
+      //   fromPubkey: receiverAddress,
+      //   newAccountPubkey: rewardMintKeypair.publicKey, //   space: spltoken.MintLayout.span,
+      //   lamports: mintLayoutMinBalance,
+      //   programId: spltoken.TOKEN_PROGRAM_ID,
+      // }));
+      // instructions.push(spltoken.Token.createInitMintInstruction(
+      //   spltoken.TOKEN_PROGRAM_ID,
+      //   rewardMintKeypair.publicKey,
+      //   0,               // decimals
+      //   receiverAddress, // mint authority
+      //   receiverAddress, // freeze authority
+      // ));
+      // instructions.push(spltoken.Token.createAssociatedTokenAccountInstruction(
+      //   spltoken.ASSOCIATED_TOKEN_PROGRAM_ID,
+      //   spltoken.TOKEN_PROGRAM_ID,
+      //   rewardMintKeypair.publicKey,
+      //   rewardAtaAddress,
+      //   receiverAddress,
+      //   receiverAddress,
+      // ));
+      // instructions.push(spltoken.Token.createMintToInstruction(
+      //   spltoken.TOKEN_PROGRAM_ID,
+      //   rewardMintKeypair.publicKey,
+      //   rewardAtaAddress,
+      //   receiverAddress,
+      //   [], // multisig
+      //   1,  // amount
+      // ));
       instructions.push(new solana.TransactionInstruction({
         programId: programId,
         data: Buffer.from('2'),
@@ -167,7 +170,7 @@ module.exports = function (input) {
           { isSigner: false, isWritable: true,  pubkey: rewardCandyMachineAddress },
           { isSigner: false, isWritable: true,  pubkey: creatorIntermediaryTokenAtaAddress }, // wallet/treasury
           { isSigner: false, isWritable: true,  pubkey: rewardMetadataAddress },
-          { isSigner: false,  isWritable: true,  pubkey: rewardMintKeypair.publicKey },
+          { isSigner: true,  isWritable: true,  pubkey: rewardMintKeypair.publicKey },
           { isSigner: false, isWritable: true,  pubkey: rewardMasterEditionAddress },
           { isSigner: false, isWritable: false, pubkey: metaplex.programs.metadata.MetadataProgram.PUBKEY },
           { isSigner: false, isWritable: false, pubkey: solana.SystemProgram.programId },
@@ -184,7 +187,7 @@ module.exports = function (input) {
     .then(function (response) {
       var trx = new solana.Transaction({
         feePayer: receiverAddress,
-        recentBlockhash: response.blockhash
+        recentBlockhash: response.blockhash,
       });
       instructions.forEach(function (_) { trx.add(_); });
       trx.partialSign(rewardMintKeypair);

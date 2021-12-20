@@ -10,37 +10,42 @@ use spl_token::state::Account as SplTokenAccount;
 use spl_token_metadata::state::Metadata;
 use solana_program::instruction::Instruction;
 use solana_program::instruction::AccountMeta;
+use solana_program::rent::Rent;
 
 
 
 #[derive(Debug)]
-struct NftAllowanceAccount {
+struct Allowance {
   used: u8,
-  nft_mint: Pubkey,
+  nft_mint: Option<Pubkey>,
 }
 
 
 
-impl Sealed for NftAllowanceAccount {}
+impl Sealed for Allowance {}
 
 
 
-impl Pack for NftAllowanceAccount {
+impl Pack for Allowance {
   const LEN: usize = 33;
 
   fn unpack_from_slice(src: &[u8]) -> Result<Self, ProgramError> {
-    let account = NftAllowanceAccount {
+    if src.len() == 0 {
+      return Ok(Allowance { used: 0, nft_mint: None });
+    }
+    let account = Allowance {
       used: src[0],
-      nft_mint: Pubkey::new(&src[1..Self::LEN])
+      nft_mint: Some(Pubkey::new(&src[1..Self::LEN]))
     };
-    msg!("ALLOWANCE {:?}", account);
     Ok(account)
   }
 
   fn pack_into_slice(&self, dst: &mut [u8]) {
-    let NftAllowanceAccount { used, nft_mint } = self;
+    let Allowance { used, nft_mint } = self;
     dst[0] = *used as u8;
-    dst[1..Self::LEN].copy_from_slice(nft_mint.as_ref());
+    if let Some(some_nft_mint) = nft_mint {
+      dst[1..Self::LEN].copy_from_slice(some_nft_mint.as_ref());
+    }
   }
 }
 
@@ -185,16 +190,60 @@ pub fn verify_nft_allowance_account_is_owned(
 pub fn verify_nft_allowance_account_is_not_used(
   nft_allowance: &AccountInfo,
 ) -> Result<u8, ProgramError> {
-  let data = nft_allowance.try_borrow_mut_data()?;
-  // let unpacked = allowance::NftAllowanceAccount::try_from_slice(&data)?;
-  msg!("{:?}", data);
+  let allowance = Allowance::unpack_from_slice(&nft_allowance.try_borrow_data()?)?;
+  if allowance.used == 1 {
+    msg!("NFT allowance account was already used");
+    return Err(ProgramError::Custom(1));
+  }
   Ok(1)
 }
 
- 
+
+
+pub fn create_nft_allowance_account_if_nonexistent<'a>(
+  program_id: &Pubkey,
+  receiver: &AccountInfo<'a>,
+  nft_allowance: &AccountInfo<'a>,
+  nft_mint: &AccountInfo<'a>,
+  system_program: &AccountInfo<'a>,
+  rent: Rent,
+) -> Result<u8, ProgramError> {
+  if nft_allowance.data.borrow().len() != 0 { return Ok(1); }
+
+  let key: &[u8] = b"allowance";
+  let (allowance, bump) = Pubkey::find_program_address(&[key, program_id.as_ref(), nft_mint.key.as_ref()], &program_id);
+  let signer: &[&[&[u8]]] = &[&[&key[..], program_id.as_ref(), nft_mint.key.as_ref(), &[bump]]];
+  let size = (1 + 32) as usize;
+
+  invoke_signed(
+    &solana_program::system_instruction::create_account(
+      receiver.key,
+      &allowance,
+      1.max(rent.minimum_balance(size)),
+      size as u64,
+      &program_id,
+    ),
+    &[
+      receiver.clone(),
+      nft_allowance.clone(),
+      system_program.clone(),
+    ],
+    signer
+  )?;
+
+  Ok(1)
+}
+
+
 
 pub fn update_nft_allowance_account_as_used(
+  nft_allowance: &AccountInfo,
+  nft_mint: &AccountInfo,
 ) -> Result<u8, ProgramError> {
+  let mut allowance = Allowance::unpack_from_slice(&nft_allowance.try_borrow_data()?)?;
+  allowance.used = 1;
+  allowance.nft_mint = Some(*nft_mint.key);
+  Allowance::pack_into_slice(&allowance, &mut nft_allowance.try_borrow_mut_data()?);
   Ok(1)
 }
 

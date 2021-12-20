@@ -17,9 +17,9 @@ module.exports = function (params) {
           '--keypair', secretKeyPath,
         ]
       })
-        .catch(function (error) {
-          console.log(new Date(), '* Could not upload.', error);
-        });
+    })
+    .catch(function (error) {
+      console.log(new Date(), '* Could not upload.', error);
     })
     .then(function () {
       var cmdparams = [
