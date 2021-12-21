@@ -118,8 +118,13 @@ module.exports = function (input) {
       mintLayoutMinBalance = balance;
     })
 
-    // NOTE: Create and mint one nft that the candy machine will certify.
+    // NOTE: Create intermediary token associated account for receiver if it
+    // doesnt exist.
     .then(function () {
+      return connection.getAccountInfo(receiverIntermediaryTokenAtaAddress);
+    })
+    .then(function (accountInfo) {
+      if (!accountInfo || accountInfo.lamports != 0) return;
       instructions.push(spltoken.Token.createAssociatedTokenAccountInstruction(
         spltoken.ASSOCIATED_TOKEN_PROGRAM_ID,
         spltoken.TOKEN_PROGRAM_ID,
@@ -128,6 +133,10 @@ module.exports = function (input) {
         receiverAddress,
         receiverAddress,
       ));
+    })
+
+    // NOTE: Create and mint one nft that the candy machine will certify.
+    .then(function () {
       instructions.push(solana.SystemProgram.createAccount({
         fromPubkey: receiverAddress,
         newAccountPubkey: rewardMintKeypair.publicKey,

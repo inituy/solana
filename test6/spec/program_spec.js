@@ -20,7 +20,7 @@ var exchangeNft = require('../app/exchange_nft.js');
 
 describe('exchange NFT program', function () {
   var connection = new solana.Connection('https://api.devnet.solana.com')
-    , programId = new solana.PublicKey('68k4mTrd4uVdszH47cnodYmPot6q97rz2jXrG8FJVqEQ')
+    , programId = new solana.PublicKey('HXpwcYA4Cyif9mbKfXGJtVsZCygzTEguW6KVnPx6P4fa')
     , creatorKeypair = getCreatorKeypair()
     , receiverKeypair = getReceiverKeypair()
 

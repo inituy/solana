@@ -65,18 +65,6 @@ pub fn exchange(
   let rent = next_account_info(account_iter)?;
   let clock = next_account_info(account_iter)?;
 
-  create_reward_mint_account(
-  );
-
-  create_nft_allowance_account_if_nonexistent(
-    &program_id,
-    &receiver,
-    &nft_allowance,
-    &nft_mint,
-    &system_program,
-    Rent::from_account_info(&rent)?,
-  )?;
-
   verify_receiver_is_signer(&receiver)?;
 
   verify_nft_ata_belongs_to_mint(&nft_ata, &nft_mint)?;
@@ -86,9 +74,18 @@ pub fn exchange(
   verify_nft_metadata_belongs_to_mint(&nft_metadata, &nft_mint)?;
   verify_nft_metadata_creator(&nft_metadata)?;
 
-  verify_nft_allowance_account_address(&program_id, &nft_mint, &nft_allowance)?; // DONE
-  verify_nft_allowance_account_is_owned(&program_id, &nft_allowance)?; // DONE
-  verify_nft_allowance_account_is_not_used(&nft_allowance)?; // DONE
+  verify_nft_allowance_account_address(&program_id, &nft_mint, &nft_allowance)?;
+  verify_nft_allowance_account_is_owned(&program_id, &nft_allowance)?;
+  verify_nft_allowance_account_is_not_used(&nft_allowance)?;
+
+  create_nft_allowance_account_if_nonexistent(
+    &program_id,
+    &receiver,
+    &nft_allowance,
+    &nft_mint,
+    &system_program,
+    Rent::from_account_info(&rent)?,
+  )?;
 
   update_nft_allowance_account_as_used(
     &nft_allowance,
