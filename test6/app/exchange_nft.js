@@ -18,7 +18,7 @@ module.exports = function (input) {
     , signers = []
     , mintLayoutMinBalance;
 
-  var sendAndConfirmTransaction = input.sendAndConfirmTransaction;
+  var signAndSendTransaction = input.signAndSendTransaction;
 
   var receiverAddress = input.receiverAddress
     , connection = input.connection
@@ -200,6 +200,6 @@ module.exports = function (input) {
         recentBlockhash: response.blockhash,
       });
       instructions.forEach(function (_) { trx.add(_); });
-      return sendAndConfirmTransaction(connection, trx, signers);
+      return signAndSendTransaction(connection, trx, signers);
     });
 };

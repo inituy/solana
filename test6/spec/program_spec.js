@@ -592,10 +592,14 @@ describe('exchange NFT program', function () {
           rewardCandyMachineConfigAddress: rewardCandyMachineConfigAddress,
           rewardCandyMachineAddress: rewardCandyMachineAddress,
           signAndSendTransaction: function (connection, trx, signers) {
+            trx.partialSign(receiverKeypair);
             signers.forEach(function (signer) { trx.partialSign(signer); });
             return connection.sendRawTransaction(trx.serialize());
           }
         })
+      })
+      .catch(function (error) {
+        expect(error).toBeUndefined();
       })
       .then(function (signature) {
         console.log(new Date(), 'Waiting confirmation...', signature);
@@ -603,6 +607,9 @@ describe('exchange NFT program', function () {
       })
       .then(function () {
         console.log(new Date(), 'Confirmed!');
+      })
+      .catch(function (error) {
+        expect(error).toBeUndefined();
       })
 
       // NOTE: Second try
@@ -617,6 +624,7 @@ describe('exchange NFT program', function () {
           rewardCandyMachineConfigAddress: rewardCandyMachineConfigAddress,
           rewardCandyMachineAddress: rewardCandyMachineAddress,
           signAndSendTransaction: function (connection, trx, signers) {
+            trx.partialSign(receiverKeypair);
             signers.forEach(function (signer) { trx.partialSign(signer); });
             return connection.sendRawTransaction(trx.serialize());
           }

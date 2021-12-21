@@ -19,7 +19,7 @@ document.querySelector('form').addEventListener('submit', function (e) {
         creatorIntermediaryTokenAtaAddress: new solana.PublicKey(document.querySelectorAll('input')[2].value),
         rewardCandyMachineConfigAddress: new solana.PublicKey(document.querySelectorAll('input')[3].value),
         rewardCandyMachineAddress: new solana.PublicKey(document.querySelectorAll('input')[4].value),
-        sendAndConfirmTransaction: function (connection, trx, signers) {
+        signAndSendTransaction: function (connection, trx, signers) {
           console.log(new Date(), 'Sending transaction...', trx);
           return Promise.resolve()
             .then(function () { return phantom.signTransaction(trx); })
