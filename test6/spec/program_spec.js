@@ -516,11 +516,11 @@ describe('exchange NFT program', function () {
           creatorIntermediaryTokenAtaAddress: creatorIntermediaryTokenAtaAddress,
           rewardCandyMachineConfigAddress: rewardCandyMachineConfigAddress,
           rewardCandyMachineAddress: rewardCandyMachineAddress,
+          signAndSendTransaction: function (connection, trx, signers) {
+            signers.forEach(function (signer) { trx.partialSign(signer); });
+            return connection.sendRawTransaction(trx.serialize());
+          }
         })
-      })
-      .then(function (trx) {
-        trx.partialSign(receiverKeypair);
-        return connection.sendRawTransaction(trx.serialize());
       })
       .then(function (signature) {
         console.log(new Date(), 'Waiting confirmation...', signature);
@@ -541,11 +541,11 @@ describe('exchange NFT program', function () {
           creatorIntermediaryTokenAtaAddress: creatorIntermediaryTokenAtaAddress,
           rewardCandyMachineConfigAddress: rewardCandyMachineConfigAddress,
           rewardCandyMachineAddress: rewardCandyMachineAddress,
+          signAndSendTransaction: function (connection, trx, signers) {
+            signers.forEach(function (signer) { trx.partialSign(signer); });
+            return connection.sendRawTransaction(trx.serialize());
+          }
         })
-      })
-      .then(function (trx) {
-        trx.partialSign(receiverKeypair);
-        return connection.sendRawTransaction(trx.serialize());
       })
       .then(function (signature) {
         console.log(new Date(), 'Waiting confirmation...', signature);
@@ -569,15 +569,18 @@ describe('exchange NFT program', function () {
   // * Allowance associated token account will be marked as used.
   // * Reward is minted using candy machine (`mint` instruction is called).
   fit('gives the reward to the caller', function () {
-    console.log([
-      nftMintAddress.toString(),
-      intermediaryTokenMintAddress.toString(),
-      creatorIntermediaryTokenAtaAddress.toString(),
-      rewardCandyMachineConfigAddress.toString(),
-      rewardCandyMachineAddress.toString(),
-    ]);
-    //return Promise.resolve()
-    return Promise.reject()
+    // NOTE: Uncomment this if you want to test the transaction some where
+    // else, like the web.
+    //console.log([
+    //  nftMintAddress.toString(),
+    //  intermediaryTokenMintAddress.toString(),
+    //  creatorIntermediaryTokenAtaAddress.toString(),
+    //  rewardCandyMachineConfigAddress.toString(),
+    //  rewardCandyMachineAddress.toString(),
+    //]);
+    //return Promise.reject()
+
+    return Promise.resolve()
       .then(function () {
         return exchangeNft({
           receiverAddress: receiverKeypair.publicKey,
@@ -588,11 +591,11 @@ describe('exchange NFT program', function () {
           creatorIntermediaryTokenAtaAddress: creatorIntermediaryTokenAtaAddress,
           rewardCandyMachineConfigAddress: rewardCandyMachineConfigAddress,
           rewardCandyMachineAddress: rewardCandyMachineAddress,
+          signAndSendTransaction: function (connection, trx, signers) {
+            signers.forEach(function (signer) { trx.partialSign(signer); });
+            return connection.sendRawTransaction(trx.serialize());
+          }
         })
-      })
-      .then(function (trx) {
-        trx.partialSign(receiverKeypair);
-        return connection.sendRawTransaction(trx.serialize());
       })
       .then(function (signature) {
         console.log(new Date(), 'Waiting confirmation...', signature);
@@ -613,11 +616,11 @@ describe('exchange NFT program', function () {
           creatorIntermediaryTokenAtaAddress: creatorIntermediaryTokenAtaAddress,
           rewardCandyMachineConfigAddress: rewardCandyMachineConfigAddress,
           rewardCandyMachineAddress: rewardCandyMachineAddress,
+          signAndSendTransaction: function (connection, trx, signers) {
+            signers.forEach(function (signer) { trx.partialSign(signer); });
+            return connection.sendRawTransaction(trx.serialize());
+          }
         })
-      })
-      .then(function (trx) {
-        trx.partialSign(receiverKeypair);
-        return connection.sendRawTransaction(trx.serialize());
       })
       .then(function (signature) {
         console.log(new Date(), 'Waiting confirmation...', signature);

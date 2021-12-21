@@ -15,7 +15,10 @@ if (!globalThis.Buffer) {
 
 module.exports = function (input) {
   var instructions = []
+    , signers = []
     , mintLayoutMinBalance;
+
+  var sendAndConfirmTransaction = input.sendAndConfirmTransaction;
 
   var receiverAddress = input.receiverAddress
     , connection = input.connection
@@ -183,6 +186,10 @@ module.exports = function (input) {
       }));
     })
 
+    .then(function () {
+      signers.push(rewardMintKeypair);
+    })
+
     // NOTE:
     .then(function () {
       return connection.getRecentBlockhash();
@@ -193,7 +200,6 @@ module.exports = function (input) {
         recentBlockhash: response.blockhash,
       });
       instructions.forEach(function (_) { trx.add(_); });
-      trx.partialSign(rewardMintKeypair);
-      return trx;
+      return sendAndConfirmTransaction(connection, trx, signers);
     });
 };

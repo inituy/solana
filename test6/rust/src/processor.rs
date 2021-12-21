@@ -65,6 +65,9 @@ pub fn exchange(
   let rent = next_account_info(account_iter)?;
   let clock = next_account_info(account_iter)?;
 
+  create_reward_mint_account(
+  );
+
   create_nft_allowance_account_if_nonexistent(
     &program_id,
     &receiver,
