@@ -1,29 +1,29 @@
 var phantom = window.solana;
 var solana = require('./solana/web3.js');
+var spltoken = require('./spltoken/spltoken');
 var exchangeNft = require('./app/exchange_nft');
 var connection = new solana.Connection('https://api.devnet.solana.com');
+var bs58 = require('bs58');
 
-document.querySelector('button').addEventListener('click', function () {
+document.querySelector('form').addEventListener('submit', function (e) {
+  e.preventDefault();
+  programId = new solana.PublicKey('68k4mTrd4uVdszH47cnodYmPot6q97rz2jXrG8FJVqEQ');
   Promise.resolve()
     .then(function () {
-      // TODO: Move to .env
-      var addrs = [
-        '68k4mTrd4uVdszH47cnodYmPot6q97rz2jXrG8FJVqEQ',
-        '8Mwn68bxvFSgvqdrmDY6Uffm6FuDWncphBnRywz1yChv',
-        'C4mK7STgAaNRpEcT4Xmbgbsyz1siyrenmiCciSh1FoyK',
-        'DNy7Mb5z2tqGGpjNmLPLgPpjSLNzvzNZMcNscEY2zqLw',
-        '6m4YHztTAnN2swbX1Si7CkjWsnyUUSf7t6Jwo3FNs5da',
-        'G4HGGAAi7fNqPWvoiXKGvzrCxahLq9YZwyerc3tPvL9T',
-      ];
       return exchangeNft({
         receiverAddress: phantom.publicKey,
         connection: connection,
-        programId: new solana.PublicKey(addrs[0]),
-        nftMintAddress: new solana.PublicKey(addrs[1]),
-        intermediaryTokenMintAddress: new solana.PublicKey(addrs[2]),
-        creatorIntermediaryTokenAtaAddress: new solana.PublicKey(addrs[3]),
-        rewardCandyMachineConfigAddress: new solana.PublicKey(addrs[4]),
-        rewardCandyMachineAddress: new solana.PublicKey(addrs[5]),
+        programId: programId,
+        nftMintAddress:
+          new solana.PublicKey(document.querySelectorAll('input')[0].value),
+        intermediaryTokenMintAddress:
+          new solana.PublicKey(document.querySelectorAll('input')[1].value),
+        creatorIntermediaryTokenAtaAddress:
+          new solana.PublicKey(document.querySelectorAll('input')[2].value),
+        rewardCandyMachineConfigAddress:
+          new solana.PublicKey(document.querySelectorAll('input')[3].value),
+        rewardCandyMachineAddress:
+          new solana.PublicKey(document.querySelectorAll('input')[4].value),
       });
     })
     .then(function (trx) {
@@ -31,6 +31,7 @@ document.querySelector('button').addEventListener('click', function () {
       return phantom.signAndSendTransaction(trx);
     })
     .then(function (_) {
+      console.log(new Date(), 'Confirming transaction...', _.signature);
       return connection.confirmTransaction(_.signature);
     })
     .then(function () {

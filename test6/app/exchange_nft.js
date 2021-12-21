@@ -101,6 +101,8 @@ module.exports = function (input) {
       console.log(new Date(), rewardAtaAddress.toString(), '+ Reward associated token address');
       console.log(new Date(), rewardMetadataAddress.toString(), '+ Reward metadata address');
       console.log(new Date(), rewardMasterEditionAddress.toString(), '+ Reward master edition address');
+      console.log(new Date(), rewardCandyMachineConfigAddress.toString(), '+ Reward candy machine config address');
+      console.log(new Date(), rewardCandyMachineAddress.toString(), '+ Reward candy machine address');
     })
 
 
@@ -115,43 +117,44 @@ module.exports = function (input) {
 
     // NOTE: Create and mint one nft that the candy machine will certify.
     .then(function () {
-      // instructions.push(spltoken.Token.createAssociatedTokenAccountInstruction(
-      //   spltoken.ASSOCIATED_TOKEN_PROGRAM_ID,
-      //   spltoken.TOKEN_PROGRAM_ID,
-      //   intermediaryTokenMintAddress,
-      //   receiverIntermediaryTokenAtaAddress,
-      //   receiverAddress,
-      //   receiverAddress,
-      // ));
-      // instructions.push(solana.SystemProgram.createAccount({
-      //   fromPubkey: receiverAddress,
-      //   newAccountPubkey: rewardMintKeypair.publicKey, //   space: spltoken.MintLayout.span,
-      //   lamports: mintLayoutMinBalance,
-      //   programId: spltoken.TOKEN_PROGRAM_ID,
-      // }));
-      // instructions.push(spltoken.Token.createInitMintInstruction(
-      //   spltoken.TOKEN_PROGRAM_ID,
-      //   rewardMintKeypair.publicKey,
-      //   0,               // decimals
-      //   receiverAddress, // mint authority
-      //   receiverAddress, // freeze authority
-      // ));
-      // instructions.push(spltoken.Token.createAssociatedTokenAccountInstruction(
-      //   spltoken.ASSOCIATED_TOKEN_PROGRAM_ID,
-      //   spltoken.TOKEN_PROGRAM_ID,
-      //   rewardMintKeypair.publicKey,
-      //   rewardAtaAddress,
-      //   receiverAddress,
-      //   receiverAddress,
-      // ));
-      // instructions.push(spltoken.Token.createMintToInstruction(
-      //   spltoken.TOKEN_PROGRAM_ID,
-      //   rewardMintKeypair.publicKey,
-      //   rewardAtaAddress,
-      //   receiverAddress,
-      //   [], // multisig
-      //   1,  // amount
-      // ));
+      instructions.push(spltoken.Token.createAssociatedTokenAccountInstruction(
+        spltoken.ASSOCIATED_TOKEN_PROGRAM_ID,
+        spltoken.TOKEN_PROGRAM_ID,
+        intermediaryTokenMintAddress,
+        receiverIntermediaryTokenAtaAddress,
+        receiverAddress,
+        receiverAddress,
+      ));
+      instructions.push(solana.SystemProgram.createAccount({
+        fromPubkey: receiverAddress,
+        newAccountPubkey: rewardMintKeypair.publicKey,
+        space: spltoken.MintLayout.span,
+        lamports: mintLayoutMinBalance,
+        programId: spltoken.TOKEN_PROGRAM_ID,
+      }));
+      instructions.push(spltoken.Token.createInitMintInstruction(
+        spltoken.TOKEN_PROGRAM_ID,
+        rewardMintKeypair.publicKey,
+        0,               // decimals
+        receiverAddress, // mint authority
+        receiverAddress, // freeze authority
+      ));
+      instructions.push(spltoken.Token.createAssociatedTokenAccountInstruction(
+        spltoken.ASSOCIATED_TOKEN_PROGRAM_ID,
+        spltoken.TOKEN_PROGRAM_ID,
+        rewardMintKeypair.publicKey,
+        rewardAtaAddress,
+        receiverAddress,
+        receiverAddress,
+      ));
+      instructions.push(spltoken.Token.createMintToInstruction(
+        spltoken.TOKEN_PROGRAM_ID,
+        rewardMintKeypair.publicKey,
+        rewardAtaAddress,
+        receiverAddress,
+        [], // multisig
+        1,  // amount
+      ));
       instructions.push(new solana.TransactionInstruction({
         programId: programId,
         data: Buffer.from('2'),

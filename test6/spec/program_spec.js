@@ -504,7 +504,7 @@ describe('exchange NFT program', function () {
   // NOTE: Caller can pass the allowance account twice, which means they
   // already got their reward. In that case, we will not accept the allowance
   // account.
-  fit('fails if allowance ata was already used', function () {
+  it('fails if allowance ata was already used', function () {
     return Promise.resolve()
       .then(function () {
         return exchangeNft({
@@ -568,18 +568,27 @@ describe('exchange NFT program', function () {
   // NOTE: If caller passes all the right values:
   // * Allowance associated token account will be marked as used.
   // * Reward is minted using candy machine (`mint` instruction is called).
-  it('gives the reward to the caller', function () {
-    return Promise.resolve()
+  fit('gives the reward to the caller', function () {
+    console.log([
+      programId.toString(),
+      nftMintAddress.toString(),
+      intermediaryTokenMintAddress.toString(),
+      creatorIntermediaryTokenAtaAddress.toString(),
+      rewardCandyMachineConfigAddress.toString(),
+      rewardCandyMachineAddress.toString(),
+    ]);
+    //return Promise.resolve()
+    return Promise.reject()
       .then(function () {
         return exchangeNft({
-          connection: new solana.Connection('https://api.devnet.solana.com'),
-          programId: new solana.PublicKey('68k4mTrd4uVdszH47cnodYmPot6q97rz2jXrG8FJVqEQ'),
           receiverAddress: receiverKeypair.publicKey,
-          nftMintAddress: new solana.PublicKey('H9h98ABsGHmyofVrQkXTFcKtBqTXqYEMmheYKn1RPwD7'),//nftMintAddress,
-          intermediaryTokenMintAddress: new solana.PublicKey('68k4mTrd4uVdszH47cnodYmPot6q97rz2jXrG8FJVqEQ'),//intermediaryTokenMintAddress,
-          creatorIntermediaryTokenAtaAddress: new solana.PublicKey('68k4mTrd4uVdszH47cnodYmPot6q97rz2jXrG8FJVqEQ'),//creatorIntermediaryTokenAtaAddress,
-          rewardCandyMachineConfigAddress: new solana.PublicKey('68k4mTrd4uVdszH47cnodYmPot6q97rz2jXrG8FJVqEQ'),//rewardCandyMachineConfigAddress,
-          rewardCandyMachineAddress: new solana.PublicKey('68k4mTrd4uVdszH47cnodYmPot6q97rz2jXrG8FJVqEQ')//rewardCandyMachineAddress,
+          connection: new solana.Connection('https://api.devnet.solana.com'),
+          programId: programId,
+          nftMintAddress: nftMintAddress,
+          intermediaryTokenMintAddress: intermediaryTokenMintAddress,
+          creatorIntermediaryTokenAtaAddress: creatorIntermediaryTokenAtaAddress,
+          rewardCandyMachineConfigAddress: rewardCandyMachineConfigAddress,
+          rewardCandyMachineAddress: rewardCandyMachineAddress,
         })
       })
       .then(function (trx) {
@@ -597,9 +606,9 @@ describe('exchange NFT program', function () {
       // NOTE: Second try
       .then(function () {
         return exchangeNft({
-          connection: new solana.Connection('https://api.devnet.solana.com'),
-          programId: new solana.PublicKey('68k4mTrd4uVdszH47cnodYmPot6q97rz2jXrG8FJVqEQ'),
           receiverAddress: receiverKeypair.publicKey,
+          connection: new solana.Connection('https://api.devnet.solana.com'),
+          programId: programId,
           nftMintAddress: nftMintAddress,
           intermediaryTokenMintAddress: intermediaryTokenMintAddress,
           creatorIntermediaryTokenAtaAddress: creatorIntermediaryTokenAtaAddress,
