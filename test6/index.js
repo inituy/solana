@@ -14,16 +14,11 @@ document.querySelector('form').addEventListener('submit', function (e) {
         receiverAddress: phantom.publicKey,
         connection: connection,
         programId: programId,
-        nftMintAddress:
-          new solana.PublicKey(document.querySelectorAll('input')[0].value),
-        intermediaryTokenMintAddress:
-          new solana.PublicKey(document.querySelectorAll('input')[1].value),
-        creatorIntermediaryTokenAtaAddress:
-          new solana.PublicKey(document.querySelectorAll('input')[2].value),
-        rewardCandyMachineConfigAddress:
-          new solana.PublicKey(document.querySelectorAll('input')[3].value),
-        rewardCandyMachineAddress:
-          new solana.PublicKey(document.querySelectorAll('input')[4].value),
+        nftMintAddress: new solana.PublicKey(document.querySelectorAll('input')[0].value),
+        intermediaryTokenMintAddress: new solana.PublicKey(document.querySelectorAll('input')[1].value),
+        creatorIntermediaryTokenAtaAddress: new solana.PublicKey(document.querySelectorAll('input')[2].value),
+        rewardCandyMachineConfigAddress: new solana.PublicKey(document.querySelectorAll('input')[3].value),
+        rewardCandyMachineAddress: new solana.PublicKey(document.querySelectorAll('input')[4].value),
       });
     })
     .then(function (trx) {

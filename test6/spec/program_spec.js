@@ -570,7 +570,6 @@ describe('exchange NFT program', function () {
   // * Reward is minted using candy machine (`mint` instruction is called).
   fit('gives the reward to the caller', function () {
     console.log([
-      programId.toString(),
       nftMintAddress.toString(),
       intermediaryTokenMintAddress.toString(),
       creatorIntermediaryTokenAtaAddress.toString(),
