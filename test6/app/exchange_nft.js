@@ -124,7 +124,7 @@ module.exports = function (input) {
       return connection.getAccountInfo(receiverIntermediaryTokenAtaAddress);
     })
     .then(function (accountInfo) {
-      if (!accountInfo || accountInfo.lamports != 0) return;
+      if (!!accountInfo && accountInfo.lamports != 0) return;
       instructions.push(spltoken.Token.createAssociatedTokenAccountInstruction(
         spltoken.ASSOCIATED_TOKEN_PROGRAM_ID,
         spltoken.TOKEN_PROGRAM_ID,

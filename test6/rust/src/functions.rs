@@ -30,9 +30,7 @@ impl Pack for Allowance {
   const LEN: usize = 33;
 
   fn unpack_from_slice(src: &[u8]) -> Result<Self, ProgramError> {
-    if src.len() == 0 {
-      return Ok(Allowance { used: 0, nft_mint: None });
-    }
+    if src.len() == 0 { return Ok(Allowance { used: 0, nft_mint: None }); }
     let account = Allowance {
       used: src[0],
       nft_mint: Some(Pubkey::new(&src[1..Self::LEN]))
@@ -90,7 +88,9 @@ pub fn verify_nft_metadata_creator(
   let metadata = Metadata::from_account_info(&nft_metadata)?;
   let creators = metadata.data.creators.ok_or(ProgramError::Custom(1))?;
   let accepted_creators: &[Pubkey] = &[
-    pubkey_from_str("HW6oto3fnZuWfFcLaMBRkA4UYChQ8D57LTcHLKS3GmbC")?
+    pubkey_from_str("HW6oto3fnZuWfFcLaMBRkA4UYChQ8D57LTcHLKS3GmbC")?,
+    pubkey_from_str("Dc6N9y6yADw67rFXof1LGG2TiDtUUmCWHCnwcPxdbp9k")?,
+    pubkey_from_str("5QkKHMDVTiZkh4PxB9uVPxih7PrP5FMeqhBE8rcosaPM")?,
   ];
   for creator in creators {
     if creator.verified {
@@ -167,19 +167,6 @@ pub fn verify_nft_allowance_account_address(
   let expected_address = pda.0;
   if *nft_allowance.key != expected_address {
     msg!("NFT allowance account address is not valid");
-    return Err(ProgramError::Custom(1));
-  }
-  Ok(1)
-}
-
-
-
-pub fn verify_nft_allowance_account_is_owned(
-  program_id: &Pubkey,
-  nft_allowance: &AccountInfo,
-) -> Result<u8, ProgramError> {
-  if *nft_allowance.key != *program_id {
-    msg!("NFT allowance account not owned by program");
     return Err(ProgramError::Custom(1));
   }
   Ok(1)

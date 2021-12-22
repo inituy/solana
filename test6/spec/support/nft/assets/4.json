@@ -1,11 +1,11 @@
 {
-  "name": "Pokemon 1",
+  "name": "NFT 4",
   "symbol": "",
-  "image": "1.png",
+  "image": "4.png",
   "properties": {
     "files": [
       {
-        "uri": "1.png",
+        "uri": "4.png",
         "type": "image/png"
       }
     ],

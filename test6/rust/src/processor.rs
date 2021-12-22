@@ -12,7 +12,6 @@ use crate::functions::verify_nft_ata_belongs_to_receiver;
 use crate::functions::verify_nft_ata_balance_is_not_zero;
 use crate::functions::verify_nft_metadata_belongs_to_mint;
 use crate::functions::verify_nft_metadata_creator;
-use crate::functions::verify_nft_allowance_account_is_owned;
 use crate::functions::verify_nft_allowance_account_address;
 use crate::functions::verify_nft_allowance_account_is_not_used;
 
@@ -75,7 +74,6 @@ pub fn exchange(
   verify_nft_metadata_creator(&nft_metadata)?;
 
   verify_nft_allowance_account_address(&program_id, &nft_mint, &nft_allowance)?;
-  verify_nft_allowance_account_is_owned(&program_id, &nft_allowance)?;
   verify_nft_allowance_account_is_not_used(&nft_allowance)?;
 
   create_nft_allowance_account_if_nonexistent(

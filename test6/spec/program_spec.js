@@ -636,7 +636,10 @@ describe('exchange NFT program', function () {
       })
       .catch(function (error) {
         expect(error).not.toBeUndefined();
-        expect(error.logs[1].indexOf('NFT allowance account was already used')).not.toBe(-1);
+        var expected = 'NFT allowance account was already used';
+        var findError = function (log) { return log.indexOf(error) != -1; };
+        var error = error.logs.find(findError);
+        expect(error).not.toBeNull();
       });
   });
 
